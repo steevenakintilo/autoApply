@@ -1,8 +1,7 @@
 # autoApply
-A bot that will apply to job for yourself
+A bot that will apply to job for yourself on Welcome to the jungle
 
 # To do
-    - Login to Welcome to the jungle , Indeed ...
     - Search through job offer
     - Get the text of the offer
     - Send the link of the over through discord weebkooh
@@ -10,3 +9,4 @@ A bot that will apply to job for yourself
     - Feel the infomation needed
     - Apply to the website
 # Done
+    - Login to Welcome to the jungle
