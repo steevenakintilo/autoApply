@@ -8,6 +8,7 @@ import time
 import traceback
 import yaml
 
+from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium import webdriver
@@ -15,7 +16,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 
-from utility_function import print_pkl_file_content , convert_list_to_correct_url_typing
+from utility_function import *
 from global_variable import *
 
 class Scrapper():
@@ -48,6 +49,17 @@ class ApplyBot():
         self.cookies_file_data:str = print_pkl_file_content()
         self.current_url:str = ""
         self.list_of_job_url:list[str] = []
+        self.list_of_job_inside_welcome_to_the_jungle_url:list[str] = []
+        self.list_of_job_outside_welcome_to_the_jungle_url:list[str] = []
+        self.sort_job_by_date:bool = self.configuration_file_data["sort_by_date"]
+        self.job_already_find:list[str] = print_file_content("all_job_url.txt").lower().split("\n")
+        self.number_of_page_to_search:int = self.configuration_file_data["number_of_page_to_search"]
+        self.maximum_number_of_offer:int = self.configuration_file_data["maximum_number_of_offer"]
+        self.question_mode:bool = False
+        self.list_of_questions:list[str] = []
+        self.list_of_questions_find:list[str] = print_file_content("list_of_questions.txt").lower().split("\n")
+        self.current_post:str = self.configuration_file_data["current_post"]
+        self.where_is_the_job:str = self.configuration_file_data["where_is_the_job"]
 
     def login(self) -> bool:
         """Login to Welcome to the jungle"""
@@ -91,7 +103,7 @@ class ApplyBot():
                 EC.presence_of_element_located((By.XPATH, accept_cookies_xpath)))
                 accept_cookies_xpath_element.click()
                 time.sleep(5)
-            except:
+            except NoSuchElementException:
                 pass
             pickle.dump(self.scrapping_window.driver.get_cookies(), open("cookies.pkl", "wb"))
             time.sleep(5)
@@ -103,12 +115,23 @@ class ApplyBot():
     def search_job_offers(self) -> None:
         """Searching job offer"""
         grid = False
+        sort_by = sort_by_relevance
+        if self.sort_job_by_date:
+            sort_by = sort_by_date
         job_type = permanent_job_url_typing
         if self.is_intership:
             job_type = internship_job_url_typing
         for words in self.job_keyword_list:
-            current_job_page = f"{job_page_url}{convert_list_to_correct_url_typing(words)}{job_type}"
-            self.scrapping_window.driver.get(current_job_page)
+            current_job_page = f"{job_page_url}{convert_list_to_correct_url_typing(words)}{job_type}{localisation_of_the_job}{self.where_is_the_job}"
+            if len(self.list_of_job_url) >= self.maximum_number_of_offer:
+                break
+            try:
+                self.scrapping_window.driver.get(current_job_page)
+                time.sleep(2)
+            except:
+                self.scrapping_window.driver.get(current_job_page)
+                self.scrapping_window.driver.refresh()
+                time.sleep(15)
             if grid is False:
                 grid_view_element = WebDriverWait(self.scrapping_window.driver,wait_time).until(
                 EC.presence_of_element_located((By.XPATH, grid_view_xpath)))
@@ -116,36 +139,40 @@ class ApplyBot():
                 grid = True
                 time.sleep(5)
             self.current_url = current_job_page
-            for page_number in range(5):
+            for page_number in range(self.number_of_page_to_search):
+                if len(self.list_of_job_url) >= self.maximum_number_of_offer:
+                    break
                 if page_number != 0:
                     time.sleep(5)
                     try:
-                        self.scrapping_window.driver.get(f"{current_job_page}&page={str(page_number+1)}")
+                        self.scrapping_window.driver.get(f"{current_job_page}{sort_by}&page={str(page_number+1)}{localisation_of_the_job}{self.where_is_the_job}")
                         time.sleep(wait_time)
                     except:
-                        traceback.print_exc()
-                        self.scrapping_window.driver.get(f"{current_job_page}&page={str(page_number+1)}")
+                        self.scrapping_window.driver.get(f"{current_job_page}{sort_by}&page={str(page_number+1)}{localisation_of_the_job}{self.where_is_the_job}")
                         self.scrapping_window.driver.refresh()
                         time.sleep(15)
                 self.get_job_info_by_page()
 
-        print(self.list_of_job_url)
-        print(len(self.list_of_job_url))
-        time.sleep(1000)
 
     def get_job_info_by_page(self) -> None:
         """Getting all jobs info of each page"""
-
-        all_jobs_of_the_page_element  = WebDriverWait(self.scrapping_window.driver,wait_time).until(
-        EC.presence_of_all_elements_located((By.CSS_SELECTOR, f'[data-testid="{all_jobs_of_the_page_datatestid}"]')))
+        try:
+            all_jobs_of_the_page_element  = WebDriverWait(self.scrapping_window.driver,wait_time).until(
+            EC.presence_of_all_elements_located((By.CSS_SELECTOR, f'[data-testid="{all_jobs_of_the_page_datatestid}"]')))
+        except:
+            time.sleep(5)
+            return
         index = 1
         while index < len(all_jobs_of_the_page_element):
             try:
+                if len(self.list_of_job_url) >= self.maximum_number_of_offer:
+                    return
                 current_job_url = f"/html/body/div[1]/div/div/div/div[3]/div/div[3]/div/ul/li[{str(index)}]/div/div/div/a"
                 current_job_url_element = WebDriverWait(self.scrapping_window.driver,wait_time - 6).until(
                 EC.presence_of_element_located((By.XPATH, current_job_url)))
-                if current_job_url_element.get_property("href") not in self.list_of_job_url:
+                if current_job_url_element.get_property("href") not in self.list_of_job_url and current_job_url_element.get_property("href").lower() not in self.job_already_find:
                     self.list_of_job_url.append(current_job_url_element.get_property("href"))
+                    #write_into_file("all_job_url.txt", current_job_url_element.get_property("href") + "\n")
                 time.sleep(0.2)
                 self.scrapping_window.driver.execute_script("arguments[0].scrollIntoView();", current_job_url_element)
                 index+=1
@@ -158,9 +185,152 @@ class ApplyBot():
                 except:
                     traceback.print_exc()
 
-def apply_script():
+    def parse_job_offer(self,job_offer_url,):
+        """Parsing job offer"""
+        try:
+            self.list_of_questions_find:list[str] = print_file_content("list_of_questions.txt").lower().split("\n")
+            time.sleep(2)
+            try:
+                self.scrapping_window.driver.get(job_offer_url)
+                time.sleep(1)
+            except:
+                self.scrapping_window.driver.get(job_offer_url)
+                self.scrapping_window.driver.refresh()
+                time.sleep(15)
+            
+            apply_button_data_testid_element = WebDriverWait(self.scrapping_window.driver,wait_time).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-testid="{apply_button_data_testid}"]')))
+            
+            if apply_button_data_testid_element.get_property("href") is not None:
+                self.list_of_job_outside_welcome_to_the_jungle_url.append(job_offer_url)
+                return
+            
+            self.list_of_job_inside_welcome_to_the_jungle_url.append(job_offer_url)
+            apply_button_data_testid_element.click()
+            time.sleep(5)
+           
+            #print(apply_form_text_split)
+            # Searching for job name:
+
+            try:
+                view_more_text_element = WebDriverWait(self.scrapping_window.driver,wait_time).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-testid="{view_more_text_datatestid}"]')))
+                self.scrapping_window.driver.execute_script("arguments[0].scrollIntoView();", view_more_text_element)
+                time.sleep(1)
+                self.scrapping_window.driver.execute_script("arguments[0].click();", view_more_text_element)
+                #view_more_text_element.click()
+            except:
+                pass
+
+            job_offer_text_element = WebDriverWait(self.scrapping_window.driver,wait_time - 6).until(
+            EC.presence_of_element_located((By.XPATH, job_offer_text_xpath)))
+            
+            print(job_offer_text_element.text)
+            # apply_form_element = WebDriverWait(self.scrapping_window.driver,wait_time - 6).until(
+            # EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-testid="{apply_form_datatestid}"]')))
+            # print(apply_form_element.text)
+
+            try:
+                current_post_element = WebDriverWait(self.scrapping_window.driver,wait_time - 6).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-testid="{current_post_datatestid}"]')))
+                if len(current_post_element.text) < 3:
+                    current_post_element.click()
+                    time.sleep(1)
+                    self.scrapping_window.driver.execute_script("arguments[0].scrollIntoView();", current_post_element)
+                    time.sleep(0.5)
+                    current_post_element.clear()
+                    time.sleep(0.5)
+                    current_post_element.send_keys(self.current_post)
+                    time.sleep(1)
+            except NoSuchElementException:
+                pass
+
+            # Searching for question
+            try:
+                job_xpath2 =  False
+                try:
+                    job_offer_question_element = WebDriverWait(self.scrapping_window.driver,wait_time - 6).until(
+                    EC.presence_of_element_located((By.XPATH, job_offer_question_xpath)))
+                except NoSuchElementException:
+                    job_offer_question_element = WebDriverWait(self.scrapping_window.driver,wait_time - 6).until(
+                    EC.presence_of_element_located((By.XPATH, job_offer_question_xpath2)))
+                    job_xpath2 = True
+                list_of_question = job_offer_question_element.text.split("\n")[1:]
+                if self.question_mode:
+                    for text in list_of_question:
+                        if len(text) > 5:
+                            if text.lower() not in self.list_of_questions and text.lower() not in self.list_of_questions_find:
+                                print(text,job_offer_url)
+                                #write_into_file("list_of_questions.txt",text.lower()+"#####"+"\n")
+                                self.list_of_questions.append(text.lower())
+                    
+                    #print(apply_form_datatestid_element.text)
+                    #print(job_offer_url)
+                    #print(".........")
+                else:
+                    for index , text in enumerate(list_of_question):
+                        current_question_xpath = f"/html/body/div[17]/div[2]/div/section/form/fieldset[3]/div[{str(index + 1)}]/div/textarea"
+                        if job_xpath2:
+                            current_question_xpath = f"/html/body/div[22]/div[2]/div/section/form/fieldset[3]/div[{str(index + 1)}]/div/textarea"
+                        current_question_element = WebDriverWait(self.scrapping_window.driver,wait_time - 5).until(
+                        EC.presence_of_element_located((By.XPATH, current_question_xpath)))
+                        current_question_element.click()
+                        time.sleep(1)
+                        self.scrapping_window.driver.execute_script("arguments[0].scrollIntoView();", current_question_element)
+                        time.sleep(2)
+                        if len(text) > 5:
+                            if text.lower() not in str(self.list_of_questions_find):
+                                write_into_file("list_of_questions.txt",text.lower()+"#####"+"\n")
+                                self.list_of_questions.append(text.lower())
+                                send_message_discord(f"Answer and add this question to all_questions.txt file with the answer\n {text}", discord_question)
+                                return
+                            answer = get_answer_from_question_list(text)
+                            current_question_element.clear()
+                            time.sleep(0.5)
+                            current_question_element.send_keys(answer)
+                     
+                        
+            except:
+                pass
+                
+            # Accept consent
+            try:
+                accept_content_element = WebDriverWait(self.scrapping_window.driver,wait_time - 5).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-testid="{accept_content_datatestid}"]')))
+                time.sleep(1)
+                self.scrapping_window.driver.execute_script("arguments[0].scrollIntoView();", accept_content_element)        
+                accept_content_element.click()
+            except NoSuchElementException:
+                pass
+
+            
+            apply_to_the_job_element = WebDriverWait(self.scrapping_window.driver,wait_time - 6).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-testid="{apply_to_the_job_datatestid}"]')))
+            time.sleep(0.5)
+            self.scrapping_window.driver.execute_script("arguments[0].scrollIntoView();", apply_to_the_job_element)
+            apply_to_the_job_element.click()
+            time.sleep(wait_time)
+
+            try:
+                apply_to_the_job_element = WebDriverWait(self.scrapping_window.driver,wait_time - 6).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-testid="{apply_to_the_job_datatestid}"]')))
+                print("Cover letter needed")
+            except NoSuchElementException:
+                print("Apply went well")
+                pass
+        except:
+            traceback.print_exc()
+
+        
+def apply_script(question_mode=False):
     """Script that will do the apply"""
     auto_apply = ApplyBot()
+    auto_apply.question_mode=question_mode
+    print(f"question_mode {question_mode}")
+    if question_mode:
+        auto_apply.number_of_page_to_search = 10
+        auto_apply.maximum_number_of_offer = 999
+
     # 1 Login
 
     if auto_apply.login() is False:
@@ -169,6 +339,24 @@ def apply_script():
     
     # 2 Search job offers
 
-    auto_apply.search_job_offers()
+    #auto_apply.search_job_offers()
+    auto_apply.list_of_job_url = ["https://www.welcometothejungle.com/fr/companies/margo/jobs/developpeur-python-r-d-h-f_paris_MARGO_QbXxgjl","https://www.welcometothejungle.com/fr/companies/keyrus/jobs/developpeur-euse-python-h-f-nb-paris_levallois"]
     print(auto_apply.list_of_job_url)
+
+    # 3 Parse job offers
+
+    for job_offer in auto_apply.list_of_job_url:
+        auto_apply.parse_job_offer(job_offer)
+        time.sleep(11000)
+    
+    # send_message_discord(f"Hello the bot have found today {len(auto_apply.list_of_job_url)} jobs offers \n {len(auto_apply.list_of_job_inside_welcome_to_the_jungle_url)} inside welcome to the jungle \n {len(auto_apply.list_of_job_outside_welcome_to_the_jungle_url)} outside welcome to the jungle")
+    # for url in auto_apply.list_of_job_inside_welcome_to_the_jungle_url:
+    #     send_message_discord(f"New job! {url}", discord_job_inside)
+    # for url in auto_apply.list_of_job_outside_welcome_to_the_jungle_url:
+    #     send_message_discord(f"New job! {url}", discord_job_outside)
+    
     time.sleep(1000)
+
+    # ? Cleanup file
+
+    remove_doublon_from_list_of_question_file()
