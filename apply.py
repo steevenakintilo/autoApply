@@ -1,6 +1,7 @@
 """File that handle all the apply process"""
 
 # pylint: disable=C0301
+# pylint: disable=W0702
 
 import pickle
 import time
@@ -18,7 +19,7 @@ from utility_function import print_pkl_file_content , convert_list_to_correct_ur
 from global_variable import *
 
 class Scrapper():
-    wait_time = 5
+    wait_time:int = 5
     options = webdriver.ChromeOptions()
     options.add_argument('--log-level=1')
     options.add_argument("--log-level=3")  # Suppress all logging levels
@@ -40,55 +41,55 @@ class ApplyBot():
             self.configuration_file_data = yaml.load(file, Loader=yaml.FullLoader)
 
         self.scrapping_window = Scrapper()
-        self.username = self.configuration_file_data["welcome_to_the_jungle_username"]
-        self.password = self.configuration_file_data["welcome_to_the_jungle_password"]
-        self.job_keyword_list = self.configuration_file_data["job_keyword_list"]
-        self.is_intership = self.configuration_file_data["is_internship"]
-        self.cookies_file_data = print_pkl_file_content()
-        self.current_url = ""
-        self.list_of_job_url = []
+        self.username:str = self.configuration_file_data["welcome_to_the_jungle_username"]
+        self.password:str = self.configuration_file_data["welcome_to_the_jungle_password"]
+        self.job_keyword_list:list[str] = self.configuration_file_data["job_keyword_list"]
+        self.is_intership:bool = self.configuration_file_data["is_internship"]
+        self.cookies_file_data:str = print_pkl_file_content()
+        self.current_url:str = ""
+        self.list_of_job_url:list[str] = []
 
-    def login(self):
+    def login(self) -> bool:
         """Login to Welcome to the jungle"""
         try:
             self.scrapping_window.driver.get(login_page_url)
             time.sleep(5)
             if len(str(self.cookies_file_data)) > 10:
                 cookies = pickle.load(open("cookies.pkl","rb"))
-                element = WebDriverWait(self.scrapping_window.driver,wait_time).until(
+                button_to_triger_login_page_element = WebDriverWait(self.scrapping_window.driver,wait_time).until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-testid="{button_to_triger_login_page_datatestid}"]')))
-                element.click()
+                button_to_triger_login_page_element.click()
                 time.sleep(5)
                 for cookie in cookies:
                     self.scrapping_window.driver.add_cookie(cookie)
                 return True
-
-            element = WebDriverWait(self.scrapping_window.driver,wait_time).until(
+            
+            button_to_triger_login_page_element = WebDriverWait(self.scrapping_window.driver,wait_time).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-testid="{button_to_triger_login_page_datatestid}"]')))
-            element.click()
+            button_to_triger_login_page_element.click()
             time.sleep(10)
-            element = WebDriverWait(self.scrapping_window.driver,wait_time).until(
+            login_button_email_element = WebDriverWait(self.scrapping_window.driver,wait_time).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-testid="{login_button_email_datatestid}"]')))
             #time.sleep(1000)
-            element.click()
+            login_button_email_element.click()
             time.sleep(2)
-            element.send_keys(self.username)
+            login_button_email_element.send_keys(self.username)
             time.sleep(1)
 
-            element = WebDriverWait(self.scrapping_window.driver,wait_time).until(
+            login_button_password_element = WebDriverWait(self.scrapping_window.driver,wait_time).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-testid="{login_button_password_datatestid}"]')))
-            element.click()
+            login_button_password_element.click()
             time.sleep(2)
-            element.send_keys(self.password)
+            login_button_password_element.send_keys(self.password)
             time.sleep(1)
-            element = WebDriverWait(self.scrapping_window.driver,wait_time).until(
+            login_button_submit_element = WebDriverWait(self.scrapping_window.driver,wait_time).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-testid="{login_button_submit_datatestid}"]')))
-            element.click()
+            login_button_submit_element.click()
             time.sleep(5)
             try:
-                element = WebDriverWait(self.scrapping_window.driver,wait_time).until(
+                accept_cookies_xpath_element = WebDriverWait(self.scrapping_window.driver,wait_time).until(
                 EC.presence_of_element_located((By.XPATH, accept_cookies_xpath)))
-                element.click()
+                accept_cookies_xpath_element.click()
                 time.sleep(5)
             except:
                 pass
@@ -96,11 +97,10 @@ class ApplyBot():
             time.sleep(5)
             return True
         except:
-            import traceback
             traceback.print_exc()
             return False
-        
-    def search_job_offers(self):
+
+    def search_job_offers(self) -> None:
         """Searching job offer"""
         grid = False
         job_type = permanent_job_url_typing
@@ -110,9 +110,9 @@ class ApplyBot():
             current_job_page = f"{job_page_url}{convert_list_to_correct_url_typing(words)}{job_type}"
             self.scrapping_window.driver.get(current_job_page)
             if grid is False:
-                element = WebDriverWait(self.scrapping_window.driver,wait_time).until(
+                grid_view_element = WebDriverWait(self.scrapping_window.driver,wait_time).until(
                 EC.presence_of_element_located((By.XPATH, grid_view_xpath)))
-                element.click()
+                grid_view_element.click()
                 grid = True
                 time.sleep(5)
             self.current_url = current_job_page
@@ -123,67 +123,40 @@ class ApplyBot():
                         self.scrapping_window.driver.get(f"{current_job_page}&page={str(page_number+1)}")
                         time.sleep(wait_time)
                     except:
-                        import traceback
                         traceback.print_exc()
-                        print(f"{current_job_page}&page={str(page_number+1)}")
-                        time.sleep(100000)
+                        self.scrapping_window.driver.get(f"{current_job_page}&page={str(page_number+1)}")
+                        self.scrapping_window.driver.refresh()
+                        time.sleep(15)
                 self.get_job_info_by_page()
 
         print(self.list_of_job_url)
         print(len(self.list_of_job_url))
         time.sleep(1000)
 
-    def get_job_info_by_page(self):
+    def get_job_info_by_page(self) -> None:
         """Getting all jobs info of each page"""
 
-        elements = WebDriverWait(self.scrapping_window.driver,wait_time).until(
-        EC.presence_of_all_elements_located((By.CSS_SELECTOR, f'[data-testid="search-results-list-item-wrapper"]')))
+        all_jobs_of_the_page_element  = WebDriverWait(self.scrapping_window.driver,wait_time).until(
+        EC.presence_of_all_elements_located((By.CSS_SELECTOR, f'[data-testid="{all_jobs_of_the_page_datatestid}"]')))
         index = 1
-        while index < len(elements):
+        while index < len(all_jobs_of_the_page_element):
             try:
                 current_job_url = f"/html/body/div[1]/div/div/div/div[3]/div/div[3]/div/ul/li[{str(index)}]/div/div/div/a"
-                element = WebDriverWait(self.scrapping_window.driver,wait_time - 6).until(
+                current_job_url_element = WebDriverWait(self.scrapping_window.driver,wait_time - 6).until(
                 EC.presence_of_element_located((By.XPATH, current_job_url)))
-                if element.get_property("href") not in self.list_of_job_url:
-                    self.list_of_job_url.append(element.get_property("href"))
+                if current_job_url_element.get_property("href") not in self.list_of_job_url:
+                    self.list_of_job_url.append(current_job_url_element.get_property("href"))
                 time.sleep(0.2)
-                self.scrapping_window.driver.execute_script("arguments[0].scrollIntoView();", element)
+                self.scrapping_window.driver.execute_script("arguments[0].scrollIntoView();", current_job_url_element)
                 index+=1
             except:
                 try:
-                    element = WebDriverWait(self.scrapping_window.driver,wait_time).until(
+                    profile_dissmiss_button_element = WebDriverWait(self.scrapping_window.driver,wait_time).until(
                     EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-testid="{profile_dissmiss_button_datatestid}"]')))
-                    element.click()
+                    profile_dissmiss_button_element.click()
                     index-=1
                 except:
-                    import traceback
                     traceback.print_exc()
-
-    # def get_job_info_by_page(self):
-    #     """Getting all jobs info of each page"""
-
-    #     elements = WebDriverWait(self.scrapping_window.driver,wait_time).until(
-    #     EC.presence_of_all_elements_located((By.CSS_SELECTOR, f'[data-testid="search-results-list-item-wrapper"]')))
-    #     index = 1
-    #     try:
-    #         for i in range(1,len(elements)):
-                
-    #             current_job_url = f"/html/body/div[1]/div/div/div/div[3]/div/div[3]/div/ul/li[{str(i)}]/div/div/div/a"
-    #             element = WebDriverWait(self.scrapping_window.driver,wait_time).until(
-    #             EC.presence_of_element_located((By.XPATH, current_job_url)))
-    #             self.list_of_job_url.append(element.get_property("href"))
-    #             time.sleep(1)
-    #             self.scrapping_window.driver.execute_script("arguments[0].scrollIntoView();", element)
-    #             time.sleep(2)
-    #     except:
-    #         try:
-    #             elements = WebDriverWait(self.scrapping_window.driver,wait_time).until(
-    #             EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-testid="{profile_dissmiss_button_datatestid}"]')))
-    #             elements.click()
-    #             self.scrapping_window.driver.execute_script("arguments[0].scrollIntoView();", element)
-    #         except:
-    #             import traceback
-    #             traceback.print_exc()
 
 def apply_script():
     """Script that will do the apply"""
