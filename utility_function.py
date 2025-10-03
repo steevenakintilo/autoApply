@@ -29,3 +29,13 @@ def print_pkl_file_content():
         except:
             return ""
     return content
+
+def convert_list_to_correct_url_typing(words):
+    "Converting a list of words to the correct typing of welcome to the jungle job search url"
+    list_of_words = words.split(" ")
+    correct_string = ""
+
+    for word in list_of_words:
+        correct_string+="%20"+word
+
+    return correct_string

@@ -1,3 +1,19 @@
+# Your welcome to the jungle username
+
 welcome_to_the_jungle_username: ""
 
+# Your welcome to the jungle password
+
 welcome_to_the_jungle_password: ""
+
+# Job keyword list
+
+job_keyword_list:
+  - "developpeur python"
+  - "ingénieur logiciel python"
+  - "développeur backend"
+  - "développeur fullstack"
+
+# If is_internship is set to false the bot will look for permanent contract otherwise he will search for internship
+
+is_internship: False

@@ -14,7 +14,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 
-from utility_function import print_pkl_file_content
+from utility_function import print_pkl_file_content , convert_list_to_correct_url_typing
 from global_variable import *
 
 class Scrapper():
@@ -24,7 +24,10 @@ class Scrapper():
     options.add_argument("--log-level=3")  # Suppress all logging levels
     # if len(str(print_pkl_info())) > 20:
     #     options.add_argument('headless')
-
+    
+    options.add_experimental_option("useAutomationExtension", False)
+    options.add_experimental_option("excludeSwitches", ["enable-automation"])
+    options.add_argument("--start-maximized")
     options.add_argument("--disable-gpu")  # Disable GPU (helpful in headless mode)
     options.add_argument("--disable-dev-shm-usage")  # Prevent shared memory issues
     driver = webdriver.Chrome(options=options)
@@ -39,14 +42,18 @@ class ApplyBot():
         self.scrapping_window = Scrapper()
         self.username = self.configuration_file_data["welcome_to_the_jungle_username"]
         self.password = self.configuration_file_data["welcome_to_the_jungle_password"]
+        self.job_keyword_list = self.configuration_file_data["job_keyword_list"]
+        self.is_intership = self.configuration_file_data["is_internship"]
         self.cookies_file_data = print_pkl_file_content()
+        self.current_url = ""
+        self.list_of_job_url = []
 
     def login(self):
         """Login to Welcome to the jungle"""
         try:
-            self.scrapping_window.driver.get(login_page)
+            self.scrapping_window.driver.get(login_page_url)
             time.sleep(5)
-            if len(str(self.cookies_file_data)) > 20:
+            if len(str(self.cookies_file_data)) > 10:
                 cookies = pickle.load(open("cookies.pkl","rb"))
                 element = WebDriverWait(self.scrapping_window.driver,wait_time).until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-testid="{button_to_triger_login_page_datatestid}"]')))
@@ -78,10 +85,13 @@ class ApplyBot():
             EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-testid="{login_button_submit_datatestid}"]')))
             element.click()
             time.sleep(5)
-            element = WebDriverWait(self.scrapping_window.driver,wait_time).until(
-            EC.presence_of_element_located((By.XPATH, accept_cookies_xpath)))
-            element.click()
-            time.sleep(5)
+            try:
+                element = WebDriverWait(self.scrapping_window.driver,wait_time).until(
+                EC.presence_of_element_located((By.XPATH, accept_cookies_xpath)))
+                element.click()
+                time.sleep(5)
+            except:
+                pass
             pickle.dump(self.scrapping_window.driver.get_cookies(), open("cookies.pkl", "wb"))
             time.sleep(5)
             return True
@@ -90,11 +100,102 @@ class ApplyBot():
             traceback.print_exc()
             return False
         
+    def search_job_offers(self):
+        """Searching job offer"""
+        grid = False
+        job_type = permanent_job_url_typing
+        if self.is_intership:
+            job_type = internship_job_url_typing
+        for words in self.job_keyword_list:
+            current_job_page = f"{job_page_url}{convert_list_to_correct_url_typing(words)}{job_type}"
+            self.scrapping_window.driver.get(current_job_page)
+            if grid is False:
+                element = WebDriverWait(self.scrapping_window.driver,wait_time).until(
+                EC.presence_of_element_located((By.XPATH, grid_view_xpath)))
+                element.click()
+                grid = True
+                time.sleep(5)
+            self.current_url = current_job_page
+            for page_number in range(5):
+                if page_number != 0:
+                    time.sleep(5)
+                    try:
+                        self.scrapping_window.driver.get(f"{current_job_page}&page={str(page_number+1)}")
+                        time.sleep(wait_time)
+                    except:
+                        import traceback
+                        traceback.print_exc()
+                        print(f"{current_job_page}&page={str(page_number+1)}")
+                        time.sleep(100000)
+                self.get_job_info_by_page()
+
+        print(self.list_of_job_url)
+        print(len(self.list_of_job_url))
+        time.sleep(1000)
+
+    def get_job_info_by_page(self):
+        """Getting all jobs info of each page"""
+
+        elements = WebDriverWait(self.scrapping_window.driver,wait_time).until(
+        EC.presence_of_all_elements_located((By.CSS_SELECTOR, f'[data-testid="search-results-list-item-wrapper"]')))
+        index = 1
+        while index < len(elements):
+            try:
+                current_job_url = f"/html/body/div[1]/div/div/div/div[3]/div/div[3]/div/ul/li[{str(index)}]/div/div/div/a"
+                element = WebDriverWait(self.scrapping_window.driver,wait_time - 6).until(
+                EC.presence_of_element_located((By.XPATH, current_job_url)))
+                if element.get_property("href") not in self.list_of_job_url:
+                    self.list_of_job_url.append(element.get_property("href"))
+                time.sleep(0.2)
+                self.scrapping_window.driver.execute_script("arguments[0].scrollIntoView();", element)
+                index+=1
+            except:
+                try:
+                    element = WebDriverWait(self.scrapping_window.driver,wait_time).until(
+                    EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-testid="{profile_dissmiss_button_datatestid}"]')))
+                    element.click()
+                    index-=1
+                except:
+                    import traceback
+                    traceback.print_exc()
+
+    # def get_job_info_by_page(self):
+    #     """Getting all jobs info of each page"""
+
+    #     elements = WebDriverWait(self.scrapping_window.driver,wait_time).until(
+    #     EC.presence_of_all_elements_located((By.CSS_SELECTOR, f'[data-testid="search-results-list-item-wrapper"]')))
+    #     index = 1
+    #     try:
+    #         for i in range(1,len(elements)):
+                
+    #             current_job_url = f"/html/body/div[1]/div/div/div/div[3]/div/div[3]/div/ul/li[{str(i)}]/div/div/div/a"
+    #             element = WebDriverWait(self.scrapping_window.driver,wait_time).until(
+    #             EC.presence_of_element_located((By.XPATH, current_job_url)))
+    #             self.list_of_job_url.append(element.get_property("href"))
+    #             time.sleep(1)
+    #             self.scrapping_window.driver.execute_script("arguments[0].scrollIntoView();", element)
+    #             time.sleep(2)
+    #     except:
+    #         try:
+    #             elements = WebDriverWait(self.scrapping_window.driver,wait_time).until(
+    #             EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-testid="{profile_dissmiss_button_datatestid}"]')))
+    #             elements.click()
+    #             self.scrapping_window.driver.execute_script("arguments[0].scrollIntoView();", element)
+    #         except:
+    #             import traceback
+    #             traceback.print_exc()
+
 def apply_script():
     """Script that will do the apply"""
     auto_apply = ApplyBot()
+    # 1 Login
+
     if auto_apply.login() is False:
         print("Login Failed goodbye")
         return
     
-    print("Good login")
+    # 2 Search job offers
+
+    auto_apply.search_job_offers()
+    print(auto_apply.list_of_job_url)
+    time.sleep(1000)
