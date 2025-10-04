@@ -8,8 +8,6 @@ import time
 import traceback
 import yaml
 
-from selenium.common.exceptions import NoSuchElementException
-from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
@@ -19,24 +17,26 @@ from selenium.webdriver.common.keys import Keys
 from utility_function import *
 from global_variable import *
 from scrap import maker
+
 class Scrapper():
+    """Selenium window class"""
     wait_time:int = 5
     options = webdriver.ChromeOptions()
     options.add_argument('--log-level=1')
-    options.add_argument("--log-level=3")  # Suppress all logging levels
+    options.add_argument("--log-level=3")
     # if len(str(print_pkl_info())) > 20:
     #     options.add_argument('headless')
-    
+
     options.add_experimental_option("useAutomationExtension", False)
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
     options.add_argument("--start-maximized")
-    options.add_argument("--disable-gpu")  # Disable GPU (helpful in headless mode)
-    options.add_argument("--disable-dev-shm-usage")  # Prevent shared memory issues
+    options.add_argument("--disable-gpu")
+    options.add_argument("--disable-dev-shm-usage")
     driver = webdriver.Chrome(options=options)
     driver.set_page_load_timeout(15)
 
 class ApplyBot():
-    "ApplyBot clkass"
+    "ApplyBot class"
     def __init__(self):
         with open("configuration.yml", "r",encoding="utf-8") as file:
             self.configuration_file_data = yaml.load(file, Loader=yaml.FullLoader)
@@ -63,29 +63,36 @@ class ApplyBot():
         self.language:str = self.configuration_file_data["language"]
         self.resume_text:str = print_file_content("resume_text.txt")
         self.covert_letter_lenght:str = self.configuration_file_data["covert_letter_lenght"]
-
+        self.forbiden_words_job_offer_question:list[str] = self.configuration_file_data["forbiden_words_job_offer_question"]
+        self.forbiden_words_job_offer_text:list[str] = self.configuration_file_data["forbiden_words_job_offer_text"]
+        self.skip_question:bool = self.configuration_file_data["skip_question"]
+        self.skip_cover_letter:bool = self.configuration_file_data["skip_cover_letter"]
+        self.print_error:bool = self.configuration_file_data["print_error"]
+        self.list_of_job_url_to_retry:list[str] = []
+        self.apply_good = 0
+        self.apply = self.configuration_file_data["apply"]
+    
     def login(self) -> bool:
         """Login to Welcome to the jungle"""
         try:
             self.scrapping_window.driver.get(login_page_url)
-            time.sleep(5)
+            time.sleep(wait_time2)
             if len(str(self.cookies_file_data)) > 10:
                 cookies = pickle.load(open("cookies.pkl","rb"))
                 button_to_triger_login_page_element = WebDriverWait(self.scrapping_window.driver,wait_time).until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-testid="{button_to_triger_login_page_datatestid}"]')))
                 button_to_triger_login_page_element.click()
-                time.sleep(5)
+                time.sleep(wait_time2)
                 for cookie in cookies:
                     self.scrapping_window.driver.add_cookie(cookie)
                 return True
-            
+
             button_to_triger_login_page_element = WebDriverWait(self.scrapping_window.driver,wait_time).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-testid="{button_to_triger_login_page_datatestid}"]')))
             button_to_triger_login_page_element.click()
-            time.sleep(10)
+            time.sleep(wait_time)
             login_button_email_element = WebDriverWait(self.scrapping_window.driver,wait_time).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-testid="{login_button_email_datatestid}"]')))
-            #time.sleep(1000)
             login_button_email_element.click()
             time.sleep(2)
             login_button_email_element.send_keys(self.username)
@@ -100,28 +107,31 @@ class ApplyBot():
             login_button_submit_element = WebDriverWait(self.scrapping_window.driver,wait_time).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-testid="{login_button_submit_datatestid}"]')))
             login_button_submit_element.click()
-            time.sleep(5)
+            time.sleep(wait_time2)
             try:
                 accept_cookies_xpath_element = WebDriverWait(self.scrapping_window.driver,wait_time).until(
                 EC.presence_of_element_located((By.XPATH, accept_cookies_xpath)))
                 accept_cookies_xpath_element.click()
-                time.sleep(5)
-            except NoSuchElementException:
+                time.sleep(wait_time2)
+            except:
                 pass
             pickle.dump(self.scrapping_window.driver.get_cookies(), open("cookies.pkl", "wb"))
-            time.sleep(5)
+            time.sleep(wait_time2)
             return True
         except Exception as e:
             if "Message: unknown error: net::ERR_INTERNET_DISCONNECTED" in str(e):
-                print("No connection sleeping for 5 minutes")
+                if self.print_error:
+                    print("No connection sleeping for 5 minutes")
                 time.sleep(300)
-            traceback.print_exc()
+            if self.print_error:
+                traceback.print_exc()
             return False
-        
+
 
     def search_job_offers(self) -> None:
         """Searching job offer"""
         try:
+            index = 0
             grid = False
             sort_by = sort_by_relevance
             if self.sort_job_by_date:
@@ -130,7 +140,8 @@ class ApplyBot():
             if self.is_intership:
                 job_type = internship_job_url_typing
             for words in self.job_keyword_list:
-                current_job_page = f"{job_page_url}{convert_list_to_correct_url_typing(words)}{job_type}{localisation_of_the_job}{self.where_is_the_job}"
+                localisation_of_the_job = ""
+                current_job_page = f"{job_page_url}{convert_list_to_correct_url_typing(words)}{job_type}{localisation_of_the_job}"
                 if len(self.list_of_job_url) >= self.maximum_number_of_offer:
                     break
                 try:
@@ -139,32 +150,56 @@ class ApplyBot():
                 except:
                     self.scrapping_window.driver.get(current_job_page)
                     self.scrapping_window.driver.refresh()
-                    time.sleep(15)
+                    time.sleep(wait_time3)
+                
                 if grid is False:
+                    index+=1
+                    job_offer_localisation_element = WebDriverWait(self.scrapping_window.driver,wait_time).until(
+                    EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-testid="{job_offer_localisation_datatestid}"]')))
+                    if job_offer_localisation_element.text.lower() != self.where_is_the_job.lower():
+                        try:
+                            job_offer_localisation_element.click()
+                            time.sleep(1)
+                            job_offer_localisation_element.send_keys(Keys.CONTROL, 'a')
+                            job_offer_localisation_element.send_keys(Keys.BACKSPACE)
+                            job_offer_localisation_element.send_keys(self.where_is_the_job)
+                            time.sleep(1)
+                            job_offer_first_localisation_element = WebDriverWait(self.scrapping_window.driver,wait_time).until(
+                            EC.presence_of_element_located((By.XPATH, job_offer_first_localisation_xpath)))
+                            job_offer_first_localisation_element.click()
+                            time.sleep(wait_time)
+                        except:
+                            if self.print_error:
+                                traceback.print_exc()
+                            self.scrapping_window.driver.get(current_job_page)
+                            time.sleep(wait_time3)
                     grid_view_element = WebDriverWait(self.scrapping_window.driver,wait_time).until(
                     EC.presence_of_element_located((By.XPATH, grid_view_xpath)))
                     grid_view_element.click()
                     grid = True
-                    time.sleep(5)
+                    time.sleep(wait_time2)
                 self.current_url = current_job_page
                 for page_number in range(self.number_of_page_to_search):
                     if len(self.list_of_job_url) >= self.maximum_number_of_offer:
                         break
                     if page_number != 0:
-                        time.sleep(5)
+                        time.sleep(wait_time2)
                         try:
-                            self.scrapping_window.driver.get(f"{current_job_page}{sort_by}&page={str(page_number+1)}{localisation_of_the_job}{self.where_is_the_job}")
+                            self.scrapping_window.driver.get(f"{current_job_page}{sort_by}&page={str(page_number+1)}{localisation_of_the_job}")
                             time.sleep(wait_time)
                         except:
-                            self.scrapping_window.driver.get(f"{current_job_page}{sort_by}&page={str(page_number+1)}{localisation_of_the_job}{self.where_is_the_job}")
+                            self.scrapping_window.driver.get(f"{current_job_page}{sort_by}&page={str(page_number+1)}{localisation_of_the_job}")
                             self.scrapping_window.driver.refresh()
-                            time.sleep(15)
+                            time.sleep(wait_time3)
                     self.get_job_info_by_page()
         except Exception as e:
+            if self.print_error:
+                traceback.print_exc()
             if "Message: unknown error: net::ERR_INTERNET_DISCONNECTED" in str(e):
-                print("No connection sleeping for 5 minutes")
+                if self.print_error:
+                    print("No connection sleeping for 5 minutes")
                 time.sleep(300)
-            
+
 
     def get_job_info_by_page(self) -> None:
         """Getting all jobs info of each page"""
@@ -173,9 +208,10 @@ class ApplyBot():
             EC.presence_of_all_elements_located((By.CSS_SELECTOR, f'[data-testid="{all_jobs_of_the_page_datatestid}"]')))
         except Exception as e:
             if "Message: unknown error: net::ERR_INTERNET_DISCONNECTED" in str(e):
-                print("No connection sleeping for 5 minutes")
+                if self.print_error:
+                    print("No connection sleeping for 5 minutes")
                 time.sleep(300)
-            time.sleep(5)
+            time.sleep(wait_time2)
             return
         index = 1
         while index < len(all_jobs_of_the_page_element):
@@ -187,26 +223,30 @@ class ApplyBot():
                 EC.presence_of_element_located((By.XPATH, current_job_url)))
                 if current_job_url_element.get_property("href") not in self.list_of_job_url and current_job_url_element.get_property("href").lower() not in self.job_already_find:
                     self.list_of_job_url.append(current_job_url_element.get_property("href"))
-                    #write_into_file("all_job_url.txt", current_job_url_element.get_property("href") + "\n")
+                    write_into_file("all_job_url.txt", current_job_url_element.get_property("href") + "\n")
                 time.sleep(0.2)
                 self.scrapping_window.driver.execute_script("arguments[0].scrollIntoView();", current_job_url_element)
                 index+=1
             except Exception as e:
                 if "Message: unknown error: net::ERR_INTERNET_DISCONNECTED" in str(e):
-                    print("No connection sleeping for 5 minutes")
+                    if self.print_error:
+                       print("No connection sleeping for 5 minutes")
                     time.sleep(300)
-                
+
                 try:
                     profile_dissmiss_button_element = WebDriverWait(self.scrapping_window.driver,wait_time).until(
                     EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-testid="{profile_dissmiss_button_datatestid}"]')))
                     profile_dissmiss_button_element.click()
                     index-=1
                 except:
-                    traceback.print_exc()
+                    if self.print_error:
+                        traceback.print_exc()
 
-    def parse_job_offer(self,job_offer_url,):
-        """Parsing job offer"""
+    def parse_and_apply_to_job_offer(self,job_offer_url,):
+        """Parsing job offer then apply"""
         try:
+            skip = False
+            cant_apply_job_list:list[str] = []
             self.list_of_questions_find:list[str] = print_file_content("list_of_questions.txt").lower().split("\n")
             time.sleep(2)
             try:
@@ -215,154 +255,245 @@ class ApplyBot():
             except:
                 self.scrapping_window.driver.get(job_offer_url)
                 self.scrapping_window.driver.refresh()
-                time.sleep(15)
-            
-            apply_button_data_testid_element = WebDriverWait(self.scrapping_window.driver,wait_time).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-testid="{apply_button_data_testid}"]')))
-            
+                time.sleep(wait_time3)
+
+            try:
+                apply_button_data_testid_element = WebDriverWait(self.scrapping_window.driver,wait_time).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-testid="{apply_button_data_testid}"]')))
+
+            except:
+                if self.print_error:
+                    print("Error part 1")
+                if job_offer_url not in self.list_of_job_url_to_retry:
+                    self.list_of_job_url_to_retry.append(job_offer_url)
+                return
+
             if apply_button_data_testid_element.get_property("href") is not None:
                 self.list_of_job_outside_welcome_to_the_jungle_url.append(job_offer_url)
                 return
-            
+
             self.list_of_job_inside_welcome_to_the_jungle_url.append(job_offer_url)
             apply_button_data_testid_element.click()
-            time.sleep(5)
-           
+            time.sleep(wait_time2)
+
             #print(apply_form_text_split)
             # Searching for job name:
-
-            try:
-                view_more_text_element = WebDriverWait(self.scrapping_window.driver,wait_time).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-testid="{view_more_text_datatestid}"]')))
-                self.scrapping_window.driver.execute_script("arguments[0].scrollIntoView();", view_more_text_element)
-                time.sleep(1)
-                self.scrapping_window.driver.execute_script("arguments[0].click();", view_more_text_element)
-                #view_more_text_element.click()
-            except:
-                pass
+            if self.question_mode is False:
+                try:
+                    view_more_text_element = WebDriverWait(self.scrapping_window.driver,wait_time).until(
+                    EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-testid="{view_more_text_datatestid}"]')))
+                    self.scrapping_window.driver.execute_script("arguments[0].scrollIntoView();", view_more_text_element)
+                    time.sleep(1)
+                    self.scrapping_window.driver.execute_script("arguments[0].click();", view_more_text_element)
+                    #view_more_text_element.click()
+                except:
+                    pass
 
             job_offer_text_element = WebDriverWait(self.scrapping_window.driver,wait_time - 6).until(
             EC.presence_of_element_located((By.XPATH, job_offer_text_xpath)))
-            
-            print(job_offer_text_element.text)
-            # apply_form_element = WebDriverWait(self.scrapping_window.driver,wait_time - 6).until(
-            # EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-testid="{apply_form_datatestid}"]')))
-            # print(apply_form_element.text)
+
 
             try:
-                current_post_element = WebDriverWait(self.scrapping_window.driver,wait_time - 6).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-testid="{current_post_datatestid}"]')))
-                if len(current_post_element.text) < 3:
-                    current_post_element.click()
-                    time.sleep(1)
-                    self.scrapping_window.driver.execute_script("arguments[0].scrollIntoView();", current_post_element)
-                    time.sleep(0.5)
-                    current_post_element.clear()
-                    time.sleep(0.5)
-                    current_post_element.send_keys(self.current_post)
-                    time.sleep(1)
-            except NoSuchElementException:
+                for forbiden_word in self.forbiden_words_job_offer_text:
+                    if forbiden_word.lower() in job_offer_text_element.lower():
+                        send_message_discord(f"Can't apply to this job because there is a forbiden word inside job text: {forbiden_word} {job_offer_url}",discord_job_banned)
+                        return
+            except TypeError:
                 pass
+
+            print(job_offer_text_element.text)
+            apply_form_element = WebDriverWait(self.scrapping_window.driver,wait_time - 6).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-testid="{apply_form_datatestid}"]')))
+            print(apply_form_element.text)
+            if self.question_mode is False:
+                try:
+                    current_post_element = WebDriverWait(self.scrapping_window.driver,wait_time - 6).until(
+                    EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-testid="{current_post_datatestid}"]')))
+                    if len(current_post_element.text) < 3:
+                        current_post_element.click()
+                        time.sleep(1)
+                        self.scrapping_window.driver.execute_script("arguments[0].scrollIntoView();", current_post_element)
+                        time.sleep(0.5)
+                        current_post_element.clear()
+                        time.sleep(0.5)
+                        current_post_element.send_keys(self.current_post)
+                        time.sleep(1)
+                except:
+                    pass
 
             # Searching for question
             try:
-                job_xpath2 =  False
-                try:
-                    job_offer_question_element = WebDriverWait(self.scrapping_window.driver,wait_time - 6).until(
-                    EC.presence_of_element_located((By.XPATH, job_offer_question_xpath)))
-                except NoSuchElementException:
-                    job_offer_question_element = WebDriverWait(self.scrapping_window.driver,wait_time - 6).until(
-                    EC.presence_of_element_located((By.XPATH, job_offer_question_xpath2)))
-                    job_xpath2 = True
-                list_of_question = job_offer_question_element.text.split("\n")[1:]
-                if self.question_mode:
-                    for text in list_of_question:
-                        if len(text) > 5:
-                            if text.lower() not in self.list_of_questions and text.lower() not in self.list_of_questions_find:
-                                print(text,job_offer_url)
-                                write_into_file("list_of_questions.txt",text.lower()+"#####"+"\n")
-                                self.list_of_questions.append(text.lower())
-                    
-                    #print(apply_form_datatestid_element.text)
-                    #print(job_offer_url)
-                    #print(".........")
-                else:
-                    for index , text in enumerate(list_of_question):
-                        current_question_xpath = f"/html/body/div[17]/div[2]/div/section/form/fieldset[3]/div[{str(index + 1)}]/div/textarea"
-                        if job_xpath2:
-                            current_question_xpath = f"/html/body/div[22]/div[2]/div/section/form/fieldset[3]/div[{str(index + 1)}]/div/textarea"
-                        current_question_element = WebDriverWait(self.scrapping_window.driver,wait_time - 5).until(
-                        EC.presence_of_element_located((By.XPATH, current_question_xpath)))
-                        current_question_element.click()
-                        time.sleep(1)
-                        self.scrapping_window.driver.execute_script("arguments[0].scrollIntoView();", current_question_element)
-                        time.sleep(2)
-                        if len(text) > 5:
-                            if text.lower() not in str(self.list_of_questions_find):
-                                write_into_file("list_of_questions.txt",text.lower()+"#####"+"\n")
-                                self.list_of_questions.append(text.lower())
-                                send_message_discord(f"Answer and add this question to all_questions.txt file with the answer\n {text}", discord_question)
+                job_offer_xpath_nb = 999
+
+                for i , job_xpath in enumerate(job_offer_question_xpath_list):
+                    try:
+                        job_offer_question_element = WebDriverWait(self.scrapping_window.driver,wait_time - 6).until(
+                        EC.presence_of_element_located((By.XPATH, job_xpath)))
+                        job_offer_xpath_nb = i
+                        print(job_xpath)
+                    except:
+                        pass
+                question_word_found = False
+                for question_translation in question_in_several_language_list:
+                    if question_translation in str(apply_form_element.text):
+                        question_word_found = True
+
+                if job_offer_xpath_nb == 999 or question_word_found is False:
+                    print("no question on this offer " , job_offer_url)
+                if job_offer_xpath_nb != 999 and question_word_found:
+                    if self.skip_question:
+                        return
+                    if job_offer_xpath_nb < 0:
+                        job_offer_xpath_nb = 0
+                    try:
+                        list_of_question = job_offer_question_element.text.split("\n")[1:]
+                    except:
+                        list_of_question = []
+                    if self.question_mode:
+                        for text in list_of_question:
+                            if len(text) > 5:
+                                if text.lower() not in str(self.list_of_questions) and text.lower() not in self.list_of_questions_find:
+                                    print(text,job_offer_url)
+                                    write_into_file("list_of_questions.txt",text.lower()+"#####"+"\n")
+                                    self.list_of_questions.append(text.lower())
+
+                        #print(apply_form_datatestid_element.text)
+                        #print(job_offer_url)
+                        #print(".........")
+                    else:
+                        for index , text in enumerate(list_of_question):
+                            try:
+                                for forbiden_word in self.forbiden_words_job_offer_question:
+                                    if forbiden_word.lower() in text.lower():
+                                        send_message_discord(f"Can't apply to this job because there is a forbiden word inside job question: {forbiden_word} {job_offer_url}",discord_job_banned)
+                                        return
+                            except TypeError:
+                                pass
+                            try:
+                                current_question_xpath = f"/html/body/div[{job_offer_question_xpath_list_special_nb[job_offer_xpath_nb]}]/div[2]/div/section/form/fieldset[3]/div[{str(index + 1)}]/div/textarea"
+                                current_question_element = WebDriverWait(self.scrapping_window.driver,wait_time - 5).until(
+                                EC.presence_of_element_located((By.XPATH, current_question_xpath)))
+                            except:
+                                try:
+                                    current_question_xpath = f"/html/body/div[{job_offer_question_xpath_list_special_nb[job_offer_xpath_nb]}]/div[2]/div/section/form/fieldset[3]/div/div/div[2]/div[1]/div[1]"
+                                    current_question_element = WebDriverWait(self.scrapping_window.driver,wait_time - 5).until(
+                                    EC.presence_of_element_located((By.XPATH, current_question_xpath)))
+                                except:
+                                    current_question_xpath = f"/html/body/div[{job_offer_question_xpath_list_special_nb[job_offer_xpath_nb]}]/div[2]/div/section/form/fieldset[3]/div/div/div[{str(index + 1)}]/div[1]/div[1]"
+                                    current_question_element = WebDriverWait(self.scrapping_window.driver,wait_time - 5).until(
+                                    EC.presence_of_element_located((By.XPATH, current_question_xpath)))
+
+
+                            current_question_element.click()
+                            if "choose" in current_question_element.get_attribute("placeholder").lower():
+                                send_message_discord(f"Can't apply to this job because it's a placeholder and not question {job_offer_url}",discord_job_error)
                                 return
-                            answer = get_answer_from_question_list(text)
-                            current_question_element.clear()
-                            time.sleep(0.5)
-                            current_question_element.send_keys(answer)
-                     
-                        
+                            time.sleep(1)
+                            self.scrapping_window.driver.execute_script("arguments[0].scrollIntoView();", current_question_element)
+                            time.sleep(2)
+                            if len(text) > 5:
+                                if text.lower() not in str(self.list_of_questions_find):
+                                    write_into_file("list_of_questions.txt",text.lower()+"#####"+"\n")
+                                    self.list_of_questions.append(text.lower())
+                                    send_message_discord(f"Answer and add this question to all_questions.txt file with the answer\n {text}", discord_question)
+                                    skip = True
+
+                                if skip is False:
+                                    answer = get_answer_from_question_list(text)
+                                    if answer == "skip" and job_offer_url not in cant_apply_job_list:
+                                        send_message_discord(f"Can't apply to this job because I don't have answer to the question {job_offer_url}",discord_job_error)
+                                        cant_apply_job_list.append(job_offer_url)
+                                    try:
+                                        current_question_element.clear()
+                                    except:
+                                        send_message_discord(f"Can't apply to this job because there is info to check but not question {job_offer_url}",discord_job_error)
+                                        return
+                                    time.sleep(0.5)
+                                    current_question_element.send_keys(answer)
+
             except:
-                pass
-                
+                if self.print_error:
+                    print("Error part 2")
+                    traceback.print_exc()
+                    print(job_offer_url)
+                    print(list_of_question)
+            if skip:
+                return
             # Accept consent
-            try:
-                accept_content_element = WebDriverWait(self.scrapping_window.driver,wait_time - 5).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-testid="{accept_content_datatestid}"]')))
-                time.sleep(1)
-                self.scrapping_window.driver.execute_script("arguments[0].scrollIntoView();", accept_content_element)        
-                accept_content_element.click()
-            except NoSuchElementException:
-                pass
 
-            
-            apply_to_the_job_element = WebDriverWait(self.scrapping_window.driver,wait_time - 6).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-testid="{apply_to_the_job_datatestid}"]')))
-            time.sleep(0.5)
-            self.scrapping_window.driver.execute_script("arguments[0].scrollIntoView();", apply_to_the_job_element)
-            apply_to_the_job_element.click()
-            time.sleep(wait_time)
+            if self.question_mode is False:
+                try:
+                    accept_content_element = WebDriverWait(self.scrapping_window.driver,wait_time - 5).until(
+                    EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-testid="{accept_content_datatestid}"]')))
+                    time.sleep(1)
+                    self.scrapping_window.driver.execute_script("arguments[0].scrollIntoView();", accept_content_element)
+                    accept_content_element.click()
+                except:
+                    pass
 
-            try:
+            if self.question_mode is False:
                 apply_to_the_job_element = WebDriverWait(self.scrapping_window.driver,wait_time - 6).until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-testid="{apply_to_the_job_datatestid}"]')))
-                print("Cover letter needed")
+                time.sleep(0.5)
+                self.scrapping_window.driver.execute_script("arguments[0].scrollIntoView();", apply_to_the_job_element)
+                apply_to_the_job_element.click()
+                time.sleep(wait_time)
+                try:
+                    apply_to_the_job_element = WebDriverWait(self.scrapping_window.driver,wait_time - 6).until(
+                    EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-testid="{apply_to_the_job_datatestid}"]')))
 
-                question_to_ask_to_chatgpt = f"From my resume and the text of this job offer can you generate a {self.covert_letter_lenght} cover letter without mentioning the subject of the cover letter the city or the date of the day and just put the text of the cover letter without adding your own opinions/texts and be humble and personal in the cover letter generate the text in {self.language} resume:\n {self.resume_text} \n job description:\n {job_offer_text_element.text} just return the cover letter don't add your own text or thinking just the text of the cover letter!!!"
-                cover_letter_text = maker([question_to_ask_to_chatgpt])
-                if str(cover_letter_text) > 50:
-                    cover_letter_element = WebDriverWait(self.scrapping_window.driver,wait_time - 6).until(
-                    EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-testid="{cover_letter_datatestid}"]')))
-                    time.sleep(0.5)
-                    self.scrapping_window.driver.execute_script("arguments[0].scrollIntoView();", cover_letter_element)
-                    apply_to_the_job_element.click()
-                    time.sleep(1)
-                    cover_letter_element.send_keys(cover_letter_text)
-                    time.sleep(99999)
-        
-            except NoSuchElementException:
-                print("Apply went well")
-                pass
+                    #print("Cover letter needed")
+
+                    if self.skip_cover_letter:
+                        return
+                    question_to_ask_to_chatgpt = f"From my resume and the text of this job offer can you generate a {self.covert_letter_lenght} cover letter without mentioning the subject of the cover letter the city or the date of the day and just put the text of the cover letter without adding your own opinions/texts and be humble and personal in the cover letter generate the text in {self.language} resume:\n {self.resume_text} \n job description:\n {job_offer_text_element.text} just return the cover letter don't add your own text or thinking just the text of the cover letter!!!"
+                    cover_letter_text = maker([question_to_ask_to_chatgpt])
+                    #print(cover_letter_text)
+                    if len(str(cover_letter_text)) < 30:
+                        if job_offer_url in self.list_of_job_url_to_retry:
+                            send_message_discord(f"Apply error on this job offer {job_offer_url} because the bot failed to generate the cover letter",discord_job_error)
+                        if job_offer_url not in self.list_of_job_url_to_retry:
+                            self.list_of_job_url_to_retry.append(job_offer_url)
+                        return
+                    if len(str(cover_letter_text)) > 30:
+                        cover_letter_element = WebDriverWait(self.scrapping_window.driver,wait_time - 6).until(
+                        EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-testid="{cover_letter_datatestid}"]')))
+                        time.sleep(0.5)
+                        self.scrapping_window.driver.execute_script("arguments[0].scrollIntoView();", cover_letter_element)
+                        time.sleep(1)
+                        cover_letter_element.send_keys(cover_letter_text)
+                        time.sleep(3)
+                        self.scrapping_window.driver.execute_script("arguments[0].scrollIntoView();", apply_to_the_job_element)
+                        time.sleep(0.5)
+                        apply_to_the_job_element.click()
+                        time.sleep(2)
+
+                except:
+                    traceback.print_exc()
+                    pass
+            #print("well done")
+            send_message_discord(f"I have applied to this job offer! {job_offer_url}" , discord_apply_sucess)
+            self.apply_good+=1
         except Exception as e:
             if "Message: unknown error: net::ERR_INTERNET_DISCONNECTED" in str(e):
-                print("No connection sleeping for 5 minutes")
+                if self.print_error:
+                    print("No connection sleeping for 5 minutes")
+                if job_offer_url in self.list_of_job_url_to_retry:  
+                    send_message_discord(f"Apply error on this job offer {job_offer_url} because they were no wifi",discord_job_error)
                 time.sleep(300)
             
-            traceback.print_exc()
+            if job_offer_url not in self.list_of_job_url_to_retry:
+                self.list_of_job_url_to_retry.append(job_offer_url)
+            if job_offer_url in self.list_of_job_url_to_retry:  
+                send_message_discord(f"Apply error on this job offer {job_offer_url}",discord_job_error)
+            if self.print_error:
+                traceback.print_exc()
 
-        
+
 def apply_script(question_mode=False):
     """Script that will do the apply"""
     auto_apply = ApplyBot()
     auto_apply.question_mode=question_mode
-    print(f"question_mode {question_mode}")
     if question_mode:
         auto_apply.number_of_page_to_search = 10
         auto_apply.maximum_number_of_offer = 999
@@ -372,27 +503,41 @@ def apply_script(question_mode=False):
     if auto_apply.login() is False:
         print("Login Failed goodbye")
         return
-    
+
     # 2 Search job offers
 
-    #auto_apply.search_job_offers()
-    auto_apply.list_of_job_url = ["https://www.welcometothejungle.com/fr/companies/margo/jobs/developpeur-python-r-d-h-f_paris_MARGO_QbXxgjl","https://www.welcometothejungle.com/fr/companies/keyrus/jobs/developpeur-euse-python-h-f-nb-paris_levallois"]
-    print(auto_apply.list_of_job_url)
+    auto_apply.search_job_offers()
 
-    # 3 Parse job offers
+    #auto_apply.list_of_job_url = ["https://www.welcometothejungle.com/fr/companies/maki/jobs/sotfware-engineer_paris"]
+
+    # 3 Send offer link to discord
+
+    send_message_discord(f"Hello the bot have found today {len(auto_apply.list_of_job_url)} jobs offers \n {len(auto_apply.list_of_job_inside_welcome_to_the_jungle_url)} inside welcome to the jungle \n {len(auto_apply.list_of_job_outside_welcome_to_the_jungle_url)} outside welcome to the jungle")
+    
+    for url in auto_apply.list_of_job_inside_welcome_to_the_jungle_url:
+        send_message_discord(f"New job! {url}", discord_job_inside)
+    for url in auto_apply.list_of_job_outside_welcome_to_the_jungle_url:
+        send_message_discord(f"New job! {url}", discord_job_outside)
+
+    if auto_apply.apply is False:
+        send_message_discord("No need to apply see you soon",discord_stat)
+        return
+    
+    # 4 Parse job offers then apply
 
     for job_offer in auto_apply.list_of_job_url:
-        auto_apply.parse_job_offer(job_offer)
-        time.sleep(11000)
-    
-    # send_message_discord(f"Hello the bot have found today {len(auto_apply.list_of_job_url)} jobs offers \n {len(auto_apply.list_of_job_inside_welcome_to_the_jungle_url)} inside welcome to the jungle \n {len(auto_apply.list_of_job_outside_welcome_to_the_jungle_url)} outside welcome to the jungle")
-    # for url in auto_apply.list_of_job_inside_welcome_to_the_jungle_url:
-    #     send_message_discord(f"New job! {url}", discord_job_inside)
-    # for url in auto_apply.list_of_job_outside_welcome_to_the_jungle_url:
-    #     send_message_discord(f"New job! {url}", discord_job_outside)
-    
-    time.sleep(1000)
+        auto_apply.parse_and_apply_to_job_offer(job_offer)
 
-    # ? Cleanup file
+    #  5Trying to apply again of job offer that failed
+
+    for job_offer_url_to_retry in auto_apply.list_of_job_url_to_retry:
+        auto_apply.parse_and_apply_to_job_offer(job_offer_url_to_retry)
+
+    # 6 Cleanup file
 
     remove_doublon_from_list_of_question_file()
+
+    # 7 Bye bye
+
+    send_message_discord(f"The bot applied to {auto_apply.apply_good} job offer",discord_stat)
+    send_message_discord("bye see you soon",discord_stat)

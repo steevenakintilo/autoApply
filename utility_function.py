@@ -1,7 +1,6 @@
 """File that handle utility functions"""
-
-from discord_webhook import DiscordWebhook
 import pickle
+from discord_webhook import DiscordWebhook
 
 def write_into_file(path:str, data:str) -> None:
     """Write data into a file"""
@@ -54,22 +53,26 @@ def remove_doublon_from_list_of_question_file() -> None:
 
 def send_message_discord(msg:str,weebhook_nb:int=0) -> None:
     """Send a message to a discord server using weebhook"""
-    # nb = 1 for statistics
-    # nb = 2 for job inside welcome to the jungle
-    # nb = 3 for job outside welcome to the jungle
-    # nb = 4 for new question
+    # nb = 0 for statistics
+    # nb = 1 for job inside welcome to the jungle
+    # nb = 2 for job outside welcome to the jungle
+    # nb = 3 for job banned word inside offer
+    # nb = 4 for job apply error
+    # nb = 5 for job apply success
+    # nb = 6 for new questions
+
     discord_url = print_file_content("discordWebhookUrl.txt").split("\n")
     try:
         webhook = DiscordWebhook(url=discord_url[weebhook_nb], content=msg)
         webhook.execute()
     except IndexError:
-       pass
+        pass
 
 def get_answer_from_question_list(question_to_search:str) -> str:
     """Get the right answer to the question from the list_of_questions.txt file"""
-    list_of_questions_find:list[str] = print_file_content("list_of_questions.txt").lower().split("\n")
+    list_of_questions_found:list[str] = print_file_content("list_of_questions.txt").lower().split("\n")
     question_to_search = question_to_search.lower()
-    for question in list_of_questions_find:
+    for question in list_of_questions_found:
         if question_to_search in question:
             if question.split("#####")[1][0] == " ":
                 return question.split("#####")[1][1:]

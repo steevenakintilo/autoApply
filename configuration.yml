@@ -31,7 +31,7 @@ number_of_page_to_search: 5
 
 # The maximum number of offer you want to go through
 
-maximum_number_of_offer: 25
+maximum_number_of_offer: 5
 
 # Where you want to search jobs
 
@@ -57,3 +57,19 @@ language: "french"
 # the lenght of the cover letter short , normal , long ...
 
 covert_letter_lenght: very short
+
+# If this is set to true the bot won't apply to an offer where a question is needed
+
+skip_question: False
+
+# If this is set to true the bot won't apply to an offer where a cover letter is needed
+
+skip_cover_letter: False
+
+# If print error is set to True the bot will print all the error that happend
+
+print_error: True
+
+# If this is set to False the bot will only send job url to discord and won't apply
+
+apply: True

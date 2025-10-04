@@ -1,4 +1,5 @@
 # Importing my chatgpt scrapper code to avoid recoding the same stuff for cover letter
+# pylint: disable=all
 
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
@@ -18,26 +19,17 @@ class Scraper:
     options = uc.ChromeOptions()
     options.add_experimental_option(
     "prefs", {"credentials_enable_service": False, "profile.password_manager_enabled": False})
-    options.add_argument('headless')
+    #options.add_argument('headless')
     ua = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36'
     options.add_argument(f'--user-agent={ua}') 
     try:
-      driver = uc.Chrome(version_main=140, options=options)
+      driver = uc.Chrome(options=options)
     except Exception as e:
       if "This version of ChromeDriver only supports Chrome version" in str(e):
         print("Update your chrome version!!!")
         print("https://www.google.com/intl/fr_fr/chrome/")
         exit()
-    
-    
-    # try:
-    #     driver = uc.Chrome(options=options)
-    # except Exception as e:
-    #   if "This version of ChromeDriver only supports Chrome version" in str(e):
-    #     print("Update your chrome version!!!")
-    #     print("https://www.google.com/intl/fr_fr/chrome/")
-    #     exit()
-    
+
     driver.maximize_window()
     login_link = "https://chat.openai.com/auth/login"
     emailxpath = "/html/body/div/main/section/div/div/div/div[1]/div/form/div[1]/div/div/div/input"
@@ -58,15 +50,15 @@ class Scraper:
      
 
 def maker(questions):
-  S =  Scraper()
-  ans_list = []
-  questions_list = ["what is chatgpt"] + questions
-  for i in range(len(questions_list)):
-    time.sleep(1)
-    ans = while_loop(S,questions_list[i])
-    ans_list.append(ans)
-  S.driver.close()
-  return ans_list[1:]
+    S =  Scraper()
+    ans_list = []
+    questions_list = ["what is chatgpt"] + questions
+    for i in range(len(questions_list)):
+      time.sleep(1)
+      ans = while_loop(S,questions_list[i])
+      ans_list.append(ans)
+    S.driver.close()
+    return ans_list[1:]
 
 
 def while_loop(S,q):
@@ -81,7 +73,7 @@ def while_loop(S,q):
 def scrapping(S, query,mode,nb,stop=0):
 
     S.driver.implicitly_wait(15)
-    if stop >= 2:
+    if stop >= 3:
       print("Too many errors happend closing ScrapGPT")
       quit()
     
@@ -117,13 +109,6 @@ def scrapping(S, query,mode,nb,stop=0):
         time.sleep(10)
       except Exception as e:
         pass
-
-    
-    
-    #print("Answering gpt")
-
-
-
     try:
       try:
         element = WebDriverWait(S.driver, 9).until(
@@ -138,16 +123,21 @@ def scrapping(S, query,mode,nb,stop=0):
           answer = answer.text
           return (answer.replace("ChatGPT",""))
     except Exception as e:
+      if stop >= 3:
+        return ""
       if "Message: unknown error: net::ERR_INTERNET_DISCONNECTED" in str(e):
         print("No connection sleeping for 5 minutes")
         time.sleep(300)
+        stop+=1
         scrapping(S,query,mode,nb,stop)
-        time.sleep(300)
       elif "element = WebDriverWait(S.driver, 9).until(" in str(e):
         time.sleep(15)
+        stop+=1
         stop+=1
         scrapping(S,query,mode,nb,stop)
       else:
         print("An error happend try again")
+        stop+=1
+        scrapping(S,query,mode,nb,stop)
         S.driver.close()
       S.driver.close()
