@@ -14,6 +14,8 @@ job_keyword_list:
   - "développeur backend"
   - "développeur fullstack"
   - "développeur frondend"
+  - "développeur embarqué"
+  
 
 # If is_internship is set to false the bot will look for permanent contract otherwise he will search for internship
 
@@ -47,3 +49,11 @@ forbiden_words_job_offer_text:
 # Your current post
 
 current_post: "ingénieur logiciel"
+
+# Language needed for cover letter generation for chatgpt
+
+language: "french"
+
+# the lenght of the cover letter short , normal , long ...
+
+covert_letter_lenght: very short

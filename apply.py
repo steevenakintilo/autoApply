@@ -18,7 +18,7 @@ from selenium.webdriver.common.keys import Keys
 
 from utility_function import *
 from global_variable import *
-
+from scrap import maker
 class Scrapper():
     wait_time:int = 5
     options = webdriver.ChromeOptions()
@@ -60,6 +60,9 @@ class ApplyBot():
         self.list_of_questions_find:list[str] = print_file_content("list_of_questions.txt").lower().split("\n")
         self.current_post:str = self.configuration_file_data["current_post"]
         self.where_is_the_job:str = self.configuration_file_data["where_is_the_job"]
+        self.language:str = self.configuration_file_data["language"]
+        self.resume_text:str = print_file_content("resume_text.txt")
+        self.covert_letter_lenght:str = self.configuration_file_data["covert_letter_lenght"]
 
     def login(self) -> bool:
         """Login to Welcome to the jungle"""
@@ -108,58 +111,70 @@ class ApplyBot():
             pickle.dump(self.scrapping_window.driver.get_cookies(), open("cookies.pkl", "wb"))
             time.sleep(5)
             return True
-        except:
+        except Exception as e:
+            if "Message: unknown error: net::ERR_INTERNET_DISCONNECTED" in str(e):
+                print("No connection sleeping for 5 minutes")
+                time.sleep(300)
             traceback.print_exc()
             return False
+        
 
     def search_job_offers(self) -> None:
         """Searching job offer"""
-        grid = False
-        sort_by = sort_by_relevance
-        if self.sort_job_by_date:
-            sort_by = sort_by_date
-        job_type = permanent_job_url_typing
-        if self.is_intership:
-            job_type = internship_job_url_typing
-        for words in self.job_keyword_list:
-            current_job_page = f"{job_page_url}{convert_list_to_correct_url_typing(words)}{job_type}{localisation_of_the_job}{self.where_is_the_job}"
-            if len(self.list_of_job_url) >= self.maximum_number_of_offer:
-                break
-            try:
-                self.scrapping_window.driver.get(current_job_page)
-                time.sleep(2)
-            except:
-                self.scrapping_window.driver.get(current_job_page)
-                self.scrapping_window.driver.refresh()
-                time.sleep(15)
-            if grid is False:
-                grid_view_element = WebDriverWait(self.scrapping_window.driver,wait_time).until(
-                EC.presence_of_element_located((By.XPATH, grid_view_xpath)))
-                grid_view_element.click()
-                grid = True
-                time.sleep(5)
-            self.current_url = current_job_page
-            for page_number in range(self.number_of_page_to_search):
+        try:
+            grid = False
+            sort_by = sort_by_relevance
+            if self.sort_job_by_date:
+                sort_by = sort_by_date
+            job_type = permanent_job_url_typing
+            if self.is_intership:
+                job_type = internship_job_url_typing
+            for words in self.job_keyword_list:
+                current_job_page = f"{job_page_url}{convert_list_to_correct_url_typing(words)}{job_type}{localisation_of_the_job}{self.where_is_the_job}"
                 if len(self.list_of_job_url) >= self.maximum_number_of_offer:
                     break
-                if page_number != 0:
+                try:
+                    self.scrapping_window.driver.get(current_job_page)
+                    time.sleep(2)
+                except:
+                    self.scrapping_window.driver.get(current_job_page)
+                    self.scrapping_window.driver.refresh()
+                    time.sleep(15)
+                if grid is False:
+                    grid_view_element = WebDriverWait(self.scrapping_window.driver,wait_time).until(
+                    EC.presence_of_element_located((By.XPATH, grid_view_xpath)))
+                    grid_view_element.click()
+                    grid = True
                     time.sleep(5)
-                    try:
-                        self.scrapping_window.driver.get(f"{current_job_page}{sort_by}&page={str(page_number+1)}{localisation_of_the_job}{self.where_is_the_job}")
-                        time.sleep(wait_time)
-                    except:
-                        self.scrapping_window.driver.get(f"{current_job_page}{sort_by}&page={str(page_number+1)}{localisation_of_the_job}{self.where_is_the_job}")
-                        self.scrapping_window.driver.refresh()
-                        time.sleep(15)
-                self.get_job_info_by_page()
-
+                self.current_url = current_job_page
+                for page_number in range(self.number_of_page_to_search):
+                    if len(self.list_of_job_url) >= self.maximum_number_of_offer:
+                        break
+                    if page_number != 0:
+                        time.sleep(5)
+                        try:
+                            self.scrapping_window.driver.get(f"{current_job_page}{sort_by}&page={str(page_number+1)}{localisation_of_the_job}{self.where_is_the_job}")
+                            time.sleep(wait_time)
+                        except:
+                            self.scrapping_window.driver.get(f"{current_job_page}{sort_by}&page={str(page_number+1)}{localisation_of_the_job}{self.where_is_the_job}")
+                            self.scrapping_window.driver.refresh()
+                            time.sleep(15)
+                    self.get_job_info_by_page()
+        except Exception as e:
+            if "Message: unknown error: net::ERR_INTERNET_DISCONNECTED" in str(e):
+                print("No connection sleeping for 5 minutes")
+                time.sleep(300)
+            
 
     def get_job_info_by_page(self) -> None:
         """Getting all jobs info of each page"""
         try:
             all_jobs_of_the_page_element  = WebDriverWait(self.scrapping_window.driver,wait_time).until(
             EC.presence_of_all_elements_located((By.CSS_SELECTOR, f'[data-testid="{all_jobs_of_the_page_datatestid}"]')))
-        except:
+        except Exception as e:
+            if "Message: unknown error: net::ERR_INTERNET_DISCONNECTED" in str(e):
+                print("No connection sleeping for 5 minutes")
+                time.sleep(300)
             time.sleep(5)
             return
         index = 1
@@ -176,7 +191,11 @@ class ApplyBot():
                 time.sleep(0.2)
                 self.scrapping_window.driver.execute_script("arguments[0].scrollIntoView();", current_job_url_element)
                 index+=1
-            except:
+            except Exception as e:
+                if "Message: unknown error: net::ERR_INTERNET_DISCONNECTED" in str(e):
+                    print("No connection sleeping for 5 minutes")
+                    time.sleep(300)
+                
                 try:
                     profile_dissmiss_button_element = WebDriverWait(self.scrapping_window.driver,wait_time).until(
                     EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-testid="{profile_dissmiss_button_datatestid}"]')))
@@ -261,7 +280,7 @@ class ApplyBot():
                         if len(text) > 5:
                             if text.lower() not in self.list_of_questions and text.lower() not in self.list_of_questions_find:
                                 print(text,job_offer_url)
-                                #write_into_file("list_of_questions.txt",text.lower()+"#####"+"\n")
+                                write_into_file("list_of_questions.txt",text.lower()+"#####"+"\n")
                                 self.list_of_questions.append(text.lower())
                     
                     #print(apply_form_datatestid_element.text)
@@ -315,10 +334,27 @@ class ApplyBot():
                 apply_to_the_job_element = WebDriverWait(self.scrapping_window.driver,wait_time - 6).until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-testid="{apply_to_the_job_datatestid}"]')))
                 print("Cover letter needed")
+
+                question_to_ask_to_chatgpt = f"From my resume and the text of this job offer can you generate a {self.covert_letter_lenght} cover letter without mentioning the subject of the cover letter the city or the date of the day and just put the text of the cover letter without adding your own opinions/texts and be humble and personal in the cover letter generate the text in {self.language} resume:\n {self.resume_text} \n job description:\n {job_offer_text_element.text} just return the cover letter don't add your own text or thinking just the text of the cover letter!!!"
+                cover_letter_text = maker([question_to_ask_to_chatgpt])
+                if str(cover_letter_text) > 50:
+                    cover_letter_element = WebDriverWait(self.scrapping_window.driver,wait_time - 6).until(
+                    EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-testid="{cover_letter_datatestid}"]')))
+                    time.sleep(0.5)
+                    self.scrapping_window.driver.execute_script("arguments[0].scrollIntoView();", cover_letter_element)
+                    apply_to_the_job_element.click()
+                    time.sleep(1)
+                    cover_letter_element.send_keys(cover_letter_text)
+                    time.sleep(99999)
+        
             except NoSuchElementException:
                 print("Apply went well")
                 pass
-        except:
+        except Exception as e:
+            if "Message: unknown error: net::ERR_INTERNET_DISCONNECTED" in str(e):
+                print("No connection sleeping for 5 minutes")
+                time.sleep(300)
+            
             traceback.print_exc()
 
         
