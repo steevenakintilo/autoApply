@@ -71,6 +71,7 @@ class ApplyBot():
         self.list_of_job_url_to_retry:list[str] = []
         self.apply_good = 0
         self.apply = self.configuration_file_data["apply"]
+        self.list_of_job_url_question_to_answer:list[str] = []
     
     def login(self) -> bool:
         """Login to Welcome to the jungle"""
@@ -396,6 +397,7 @@ class ApplyBot():
                                     write_into_file("list_of_questions.txt",text.lower()+"#####"+"\n")
                                     self.list_of_questions.append(text.lower())
                                     send_message_discord(f"Answer and add this question to all_questions.txt file with the answer\n {text}", discord_question)
+                                    self.list_of_job_url_question_to_answer.append(job_offer_url.lower())
                                     skip = True
 
                                 if skip is False:
@@ -509,35 +511,43 @@ def apply_script(question_mode=False):
     auto_apply.search_job_offers()
 
     #auto_apply.list_of_job_url = ["https://www.welcometothejungle.com/fr/companies/maki/jobs/sotfware-engineer_paris"]
+    if question_mode:
+        # 3 Send offer link to discord
 
-    # 3 Send offer link to discord
+        send_message_discord(f"Hello the bot have found today {len(auto_apply.list_of_job_url)} jobs offers \n {len(auto_apply.list_of_job_inside_welcome_to_the_jungle_url)} inside welcome to the jungle \n {len(auto_apply.list_of_job_outside_welcome_to_the_jungle_url)} outside welcome to the jungle")
+        
+        for url in auto_apply.list_of_job_inside_welcome_to_the_jungle_url:
+            send_message_discord(f"New job! {url}", discord_job_inside)
+        for url in auto_apply.list_of_job_outside_welcome_to_the_jungle_url:
+            send_message_discord(f"New job! {url}", discord_job_outside)
 
-    send_message_discord(f"Hello the bot have found today {len(auto_apply.list_of_job_url)} jobs offers \n {len(auto_apply.list_of_job_inside_welcome_to_the_jungle_url)} inside welcome to the jungle \n {len(auto_apply.list_of_job_outside_welcome_to_the_jungle_url)} outside welcome to the jungle")
-    
-    for url in auto_apply.list_of_job_inside_welcome_to_the_jungle_url:
-        send_message_discord(f"New job! {url}", discord_job_inside)
-    for url in auto_apply.list_of_job_outside_welcome_to_the_jungle_url:
-        send_message_discord(f"New job! {url}", discord_job_outside)
+        if auto_apply.apply is False:
+            send_message_discord("No need to apply see you soon",discord_stat)
+            return
+        
+        # 4 Parse job offers then apply
 
-    if auto_apply.apply is False:
-        send_message_discord("No need to apply see you soon",discord_stat)
-        return
-    
-    # 4 Parse job offers then apply
+        for job_offer in auto_apply.list_of_job_url:
+            auto_apply.parse_and_apply_to_job_offer(job_offer)
 
-    for job_offer in auto_apply.list_of_job_url:
-        auto_apply.parse_and_apply_to_job_offer(job_offer)
+        #  5 Trying to apply again of job offer that failed
 
-    #  5Trying to apply again of job offer that failed
-
-    for job_offer_url_to_retry in auto_apply.list_of_job_url_to_retry:
-        auto_apply.parse_and_apply_to_job_offer(job_offer_url_to_retry)
+        for job_offer_url_to_retry in auto_apply.list_of_job_url_to_retry:
+            auto_apply.parse_and_apply_to_job_offer(job_offer_url_to_retry)
 
     # 6 Cleanup file
 
     remove_doublon_from_list_of_question_file()
+    list_of_all_job_url = print_file_content("all_job_url.txt").lower().split("\n")
+    reset_file("all_job_url.txt")
+    
+    for job_url in list_of_all_job_url:
+        if job_url.lower() not in auto_apply.list_of_job_url_question_to_answer:
+            write_into_file("all_job_url.txt",job_url.lower()+"\n")
 
     # 7 Bye bye
 
-    send_message_discord(f"The bot applied to {auto_apply.apply_good} job offer",discord_stat)
-    send_message_discord("bye see you soon",discord_stat)
+    if question_mode:
+
+        send_message_discord(f"The bot applied to {auto_apply.apply_good} job offer",discord_stat)
+        send_message_discord("bye see you soon",discord_stat)

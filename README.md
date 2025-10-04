@@ -2,7 +2,6 @@
 A bot that will apply to job for yourself on Welcome to the jungle
 
 # To do
-    - Answer to the questions inside list_of_questions.txt file
     - Check / Fix some bugs
 
 # Done
@@ -13,3 +12,4 @@ A bot that will apply to job for yourself on Welcome to the jungle
     - Check if you need to apply on the company site
     - Apply to the job offer
     - Feel the infomation needed
+    - Answer to the questions inside list_of_questions.txt file
