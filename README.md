@@ -4,6 +4,25 @@ https://www.welcometothejungle.com/
 
 To understand the bot and how it works first read all the README file.
 
+## 📘 Summary
+
+- [Welcome to the jungle Requirements](#welcome-to-the-jungle-requirements)
+- [Code Requirements](#code-requirements)
+- [How to use it](#how-to-use-it)
+- [Features](#features)
+- [List of questions files](#list-of-questions-files)
+- [Discord webhook](#discord-webhook)
+- [Configuration file](#configuration-file)
+  - [job_keyword_list](#job_keyword_list)
+  - [Apply](#apply)
+  - [apply_to_offer_who_have_job_keyword_list_element_in_their_name](#apply_to_offer_who_have_job_keyword_list_element_in_their_name)
+  - [skip_question](#skip_question)
+  - [skip_cover_letter](#skip_cover_letter)
+  - [forbiden_words_job_offer_question](#forbiden_words_job_offer_question)
+  - [forbiden_words_job_offer_text](#forbiden_words_job_offer_text)
+- [Cover letter generation](#cover-letter-generation)
+- [Warnings](#warnings)
+
 ## Welcome to the jungle Requirements
 You need to have a working welcome to the jungle account accessible via email + password for login.
 
