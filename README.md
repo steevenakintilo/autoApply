@@ -15,6 +15,7 @@ To understand the bot and how it works first read all the README file.
 - [Configuration file](#configuration-file)
 - [Cover letter generation](#cover-letter-generation)
 - [Warnings](#warnings)
+- [Disclaimers](#disclaimers)
 
 ## Welcome to the jungle Requirements
 You need to have a working welcome to the jungle account accessible via email + password for login.
@@ -212,3 +213,14 @@ I only tested the bot in french and english so it may not work on languages with
 If any errors happend during the apply process don't worry the bot won't apply and just send the job offer url into discord
 
 If the bot failed to launch or you see too many mistakes create an issues or dm me on my discord "sangokuhomer"
+
+## Disclaimers
+
+I made this bot for 2 purposes:
+* Having a new project to add to my github and resume
+* Time saving by auto applying for myself
+
+This project is open source so fell free to modify as you wish the configuration.yml file to have the best jobs offer and fell free to update the code or even add more features to it.
+
+I hope my bot will help you find more job
+
