@@ -486,7 +486,7 @@ class ApplyBot():
                                         return
                                     time.sleep(0.5)
                                     current_question_element.send_keys(answer)
-            
+
             except:
                 if self.print_error:
                     print("Error part 2")
@@ -548,6 +548,14 @@ class ApplyBot():
                     traceback.print_exc()
                     pass
             #print("well done")
+
+            try:
+                apply_to_the_job_element = WebDriverWait(self.scrapping_window.driver,wait_time - 5).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-testid="{apply_to_the_job_datatestid}"]')))
+                send_message_discord(f"Apply error on this job offer {job_offer_url}",discord_job_error)
+            except:
+                pass
+
             if self.question_mode is False:
                 write_into_file("list_of_applied_job.txt" , job_offer_url.lower() + "\n")
                 send_message_discord(f"I have applied to this job offer! {job_offer_url}" , discord_apply_sucess)
