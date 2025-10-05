@@ -1,5 +1,5 @@
 Do you know python ?##### Yes I do
 Can you work inside europe ?##### Yes
-have you built a python service with asyncio that applies backpressure (e.g., via asyncio.queue) to avoid memory blowups?##### skip
+have you built a python service with asyncio that applies backpressure?##### skip
 why do you want to apply to google ?##### 
 What is your english level ?##### Fluent
