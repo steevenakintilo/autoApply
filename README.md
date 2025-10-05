@@ -13,13 +13,6 @@ To understand the bot and how it works first read all the README file.
 - [List of questions files](#list-of-questions-files)
 - [Discord webhook](#discord-webhook)
 - [Configuration file](#configuration-file)
-  - [job_keyword_list](#job_keyword_list)
-  - [Apply](#apply)
-  - [apply_to_offer_who_have_job_keyword_list_element_in_their_name](#apply_to_offer_who_have_job_keyword_list_element_in_their_name)
-  - [skip_question](#skip_question)
-  - [skip_cover_letter](#skip_cover_letter)
-  - [forbiden_words_job_offer_question](#forbiden_words_job_offer_question)
-  - [forbiden_words_job_offer_text](#forbiden_words_job_offer_text)
 - [Cover letter generation](#cover-letter-generation)
 - [Warnings](#warnings)
 
@@ -41,7 +34,7 @@ Link to download pip: https://pip.pypa.io/en/stable/installation/
 
 Link to download google chrome: https://www.google.com/intl/fr_fr/chrome/ 
 
-You also need to do 7 discord webhook to recieve all the info inside discord and put the webhook url in discordWebhookUrl.txt
+You also need to do 8 discord webhook to recieve all the info inside discord and put the webhook url in discordWebhookUrl.txt
 
 Here is how to do a discord webhook? https://www.svix.com/resources/guides/how-to-make-webhook-discord/
 
@@ -123,7 +116,8 @@ In order to have all the right information available anywhere I decided to put t
 * Job error: This channel will put all the offer  where the bot didn't applied because an error happend
 * Job applied succes: This channel will put all the offer where the bot applied well
 * New question to answer: This channel will put all the job offer where you need to answer the question and the question you need to answer too
-You can name each of the 7 channels whatever you want but you should put easy to understand name
+* Cover letter:  This channel will print the cover letter generated and link of the job offer
+You can name each of the 8 channels whatever you want but you should put easy to understand name
 
 ## Configuration file 
 This file is important because it's where all your login info and filter are.
