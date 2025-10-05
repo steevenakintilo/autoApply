@@ -625,17 +625,8 @@ def apply_script(question_mode=False):
 
     #auto_apply.list_of_job_url = ["https://www.welcometothejungle.com/fr/companies/step-consulting/jobs/developpeur-python-full-stack_grenoble"]
     if question_mode is False:
-        # 3 Send offer link to discord
-        print(auto_apply.list_of_job_inside_welcome_to_the_jungle_url)
-        print(auto_apply.list_of_job_outside_welcome_to_the_jungle_url)
-        
-        send_message_discord(f"Hello the bot have found today {len(auto_apply.list_of_job_url)} jobs offers \n {len(auto_apply.list_of_job_inside_welcome_to_the_jungle_url)} inside welcome to the jungle \n {len(auto_apply.list_of_job_outside_welcome_to_the_jungle_url)} outside welcome to the jungle")
-        
-        for url in auto_apply.list_of_job_inside_welcome_to_the_jungle_url:
-            send_message_discord(f"New job! {url}", discord_job_inside)
-        for url in auto_apply.list_of_job_outside_welcome_to_the_jungle_url:
-            send_message_discord(f"New job! {url}", discord_job_outside)
 
+        # 3 If auto apply exit program
         if auto_apply.apply is False:
             send_message_discord("No need to apply see you soon",discord_stat)
             return
@@ -646,13 +637,22 @@ def apply_script(question_mode=False):
                 print(f"Job offer {index+1}/{len(auto_apply.list_of_job_url)} url:{job_offer}")
                 auto_apply.parse_and_apply_to_job_offer(job_offer)
 
-        #  5 Trying to apply again of job offer that failed
+        # 5 Send offer link to discord
+        
+        send_message_discord(f"Hello the bot have found today {len(auto_apply.list_of_job_url)} jobs offers \n {len(auto_apply.list_of_job_inside_welcome_to_the_jungle_url)} inside welcome to the jungle \n {len(auto_apply.list_of_job_outside_welcome_to_the_jungle_url)} outside welcome to the jungle")
+        
+        for url in auto_apply.list_of_job_inside_welcome_to_the_jungle_url:
+            send_message_discord(f"New job! {url}", discord_job_inside)
+        for url in auto_apply.list_of_job_outside_welcome_to_the_jungle_url:
+            send_message_discord(f"New job! {url}", discord_job_outside)
+
+        #  6 Trying to apply again of job offer that failed
 
         for index , job_offer_url_to_retry in enumerate(auto_apply.list_of_job_url_to_retry):
             print(f"Job offer retry {index+1}/{len(auto_apply.list_of_job_url_to_retry)} url:{job_offer_url_to_retry}")
             auto_apply.parse_and_apply_to_job_offer(job_offer_url_to_retry)
 
-    # 6 Cleanup file
+    # 7 Cleanup file
 
     remove_doublon_from_list_of_question_file()
     list_of_all_job_url = print_file_content("all_job_url.txt").lower().split("\n")
@@ -662,7 +662,7 @@ def apply_script(question_mode=False):
         if job_url.lower() not in auto_apply.list_of_job_url_question_to_answer:
             write_into_file("all_job_url.txt",job_url.lower()+"\n")
 
-    # 7 Bye bye
+    # 8 Bye bye
 
     if question_mode:
 
