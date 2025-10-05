@@ -9,12 +9,12 @@ welcome_to_the_jungle_password: ""
 # Job keyword list
 
 job_keyword_list:
+  - "développeur"
   - "developpeur python"
   - "ingénieur logiciel python"
   - "développeur backend"
   - "développeur fullstack"
-  - "développeur frondend"
-  - "développeur embarqué"
+
   
 
 # If is_internship is set to false the bot will look for permanent contract otherwise he will search for internship
@@ -33,9 +33,15 @@ number_of_page_to_search: 5
 
 maximum_number_of_offer: 5
 
-# Where you want to search jobs
+# Where you want to search jobs list of town
 
-where_is_the_job: Île-de-France
+where_is_the_job: 
+  - Île-de-France
+  - Paris
+
+# Country of the job
+
+country_of_the_job: "France"
 
 # If those words are in the question of the offer the bot won't apply
 

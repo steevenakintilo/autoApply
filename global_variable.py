@@ -22,6 +22,7 @@ discord_apply_sucess = 5
 discord_question = 6
 found_offer_datatestid:str = "search-results"
 grid_view_xpath:str = "/html/body/div[1]/div/div/div/div[3]/div/div[2]/div[2]/div[2]/button[2]"
+info_of_the_job_datatestid:str = "job-metadata-block"
 job_page_url:str = "https://www.welcometothejungle.com/fr/jobs?query="
 job_offer_localisation_datatestid:str = "jobs-home-search-field-location"
 job_offer_first_localisation_xpath:str = "/html/body/div[1]/div/div/div/div[1]/div/div[2]/div/div/div/div/div[2]/div/div[1]/div[2]/div/p"
