@@ -543,7 +543,6 @@ class ApplyBot():
                     good_apply_element = WebDriverWait(self.scrapping_window.driver,wait_time - 6).until(
                     EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-testid="{good_apply_datatestid}"]')))
                     time.sleep(0.5)
-                    print("niiiceeeee")
                 except:
                     skip_cover = True
                 
@@ -599,7 +598,7 @@ class ApplyBot():
 
             if self.question_mode is False:
                 write_into_file("list_of_applied_job.txt" , job_offer_url.lower() + "\n")
-                write_into_file("list_of_applied_job_date.txt" , str(today.strftime("%d/%m/%Y")) + " " + job_offer_url.lower() + "\n")
+                write_into_file("list_of_applied_job_date.txt" , str(today.strftime("%d/%m/%Y")) + " " + job_offer_url.lower() + " " + job_offer_name_element.text + "\n")
                 send_message_discord(f"I have applied to this job offer! {job_offer_url}" , discord_apply_sucess)
                 if len(list_of_question) == 0:
                     time.sleep(randint(1,20))
