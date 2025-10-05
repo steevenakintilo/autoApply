@@ -9,14 +9,14 @@ welcome_to_the_jungle_password: ""
 # Job keyword list
 
 job_keyword_list:
-  - "développeur"
   - "developpeur python"
   - "ingénieur logiciel python"
   - "développeur backend"
+  - "développeur frontend"
   - "développeur fullstack"
-
   
-
+  
+  
 # If is_internship is set to false the bot will look for permanent contract otherwise he will search for internship
 
 is_internship: False
@@ -33,11 +33,11 @@ number_of_page_to_search: 5
 
 maximum_number_of_offer: 5
 
-# Where you want to search jobs list of town
+# Where you want to search jobs list of town put "anywhere" to apply to any town of your country
 
 where_is_the_job: 
-  - Île-de-France
-  - Paris
+  - "Île-de-France"
+  - "Paris"
 
 # Country of the job
 
@@ -79,3 +79,7 @@ print_error: True
 # If this is set to False the bot will only send job url to discord and won't apply
 
 apply: True
+
+# If this is set to true the bot will only apply to job that got job_keyword_list inside the job offer name
+
+apply_to_offer_who_have_job_keyword_list_element_in_their_name: False

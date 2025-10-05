@@ -76,6 +76,7 @@ class ApplyBot():
         self.list_of_applied_job:list[str] = print_file_content("list_of_questions.txt").lower().split("\n")
         self.list_of_job_question_answered:list[str] = print_file_content("list_of_job_question_answered.txt").lower().split("\n")
         self.country_of_the_job:str = self.configuration_file_data["country_of_the_job"]
+        self.apply_to_offer_who_have_job_keyword_list_element_in_their_name:bool = self.configuration_file_data["apply_to_offer_who_have_job_keyword_list_element_in_their_name"]
 
     def login(self) -> bool:
         """Login to Welcome to the jungle"""
@@ -279,7 +280,11 @@ class ApplyBot():
                     if town.lower() in info_of_the_job_element.text.lower():
                         good_town = True
             except TypeError:
-                good_town = True    
+                good_town = True
+            
+            if "anywhere" in self.where_is_the_job:
+                good_town = True
+            
             if good_town is False:
                 return
             try:
@@ -298,6 +303,17 @@ class ApplyBot():
             self.list_of_job_inside_welcome_to_the_jungle_url.append(job_offer_url)
             apply_button_data_testid_element.click()
             time.sleep(wait_time2)
+
+            if self.apply_to_offer_who_have_job_keyword_list_element_in_their_name:
+                try:
+                    job_offer_name_element = WebDriverWait(self.scrapping_window.driver,wait_time).until(
+                    EC.presence_of_element_located((By.XPATH, job_offer_name_xpath)))
+                    if are_words_inside_list_of_words(job_offer_name_element.text,self.job_keyword_list) is False:
+                        send_message_discord(f"Can't apply to this job because the job offer name '{job_offer_name_element.text}' isn't inside job_keyword_list {str(self.job_keyword_list)}{job_offer_url}",discord_job_banned)
+                        return
+
+                except:
+                    pass
 
             #print(apply_form_text_split)
             # Searching for job name:
@@ -318,12 +334,12 @@ class ApplyBot():
 
             try:
                 for forbiden_word in self.forbiden_words_job_offer_text:
-                    if forbiden_word.lower() in job_offer_text_element.lower() and self.question_mode is False:
-                        send_message_discord(f"Can't apply to this job because there is a forbiden word inside job text: {forbiden_word} {job_offer_url}",discord_job_banned)
+                    if forbiden_word.lower() in job_offer_text_element.text.lower() and self.question_mode is False:
+                        send_message_discord(f"Can't apply to this job because there is a forbiden word '{forbiden_word}' inside job offer text {job_offer_url}",discord_job_banned)
                         return
             except TypeError:
                 pass
-
+            
             apply_form_element = WebDriverWait(self.scrapping_window.driver,wait_time - 6).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-testid="{apply_form_datatestid}"]')))
             if self.question_mode is False:
@@ -358,27 +374,32 @@ class ApplyBot():
                 for question_translation in question_in_several_language_list:
                     if question_translation.lower() in str(apply_form_element.text.lower()):
                         question_word_found = True
-
-                # if job_offer_xpath_nb == 999 or question_word_found is False:
-                #     print("no question on this offer " , job_offer_url)
-                if job_offer_xpath_nb != 999 and question_word_found:
+  
+                if job_offer_xpath_nb != 999 or question_word_found:
                     if self.skip_question:
                         return
+                    
                     if job_offer_xpath_nb < 0:
                         job_offer_xpath_nb = 0
                     try:
                         list_of_question = job_offer_question_element.text.split("\n")[1:]
                     except:
                         list_of_question = []
+                    
+                    # if len(list_of_question) == 0:
+                    #     print("check question xpath for this offer: " , job_offer_url)
+                    #     write_into_file("check_question_xpath.txt",job_offer_url+"\n")
+
+                    try:
+                        for forbiden_word in self.forbiden_words_job_offer_question:
+                            if forbiden_word.lower() in str(list_of_question).lower():
+                                send_message_discord(f"Can't apply to this job because there is a forbiden word '{forbiden_word}' inside job offer question {job_offer_url}",discord_job_banned)
+                                return
+                    except TypeError:
+                        pass
                     if self.question_mode:
                         write_into_file("list_of_job_question_answered.txt",job_offer_url+"\n")
                         for index , text in enumerate(list_of_question):
-                            try:
-                                for forbiden_word in self.forbiden_words_job_offer_question:
-                                    if forbiden_word.lower() in text.lower():
-                                        return
-                            except TypeError:
-                                pass
                             try:
                                 current_question_xpath = f"/html/body/div[{job_offer_question_xpath_list_special_nb[job_offer_xpath_nb]}]/div[2]/div/section/form/fieldset[3]/div[{str(index + 1)}]/div/textarea"
                                 current_question_element = WebDriverWait(self.scrapping_window.driver,wait_time - 5).until(
@@ -401,7 +422,6 @@ class ApplyBot():
                             self.scrapping_window.driver.execute_script("arguments[0].scrollIntoView();", current_question_element)
                             time.sleep(2)
 
-                            print(list_of_question,job_offer_url)
                             if len(text) > 5:
                                 
                                 if text.lower() not in str(self.list_of_questions) and text.lower() not in self.list_of_questions_find:
@@ -466,7 +486,7 @@ class ApplyBot():
                                         return
                                     time.sleep(0.5)
                                     current_question_element.send_keys(answer)
-
+            
             except:
                 if self.print_error:
                     print("Error part 2")
@@ -568,7 +588,7 @@ def apply_script(question_mode=False):
 
     auto_apply.search_job_offers()
 
-    #auto_apply.list_of_job_url = ["https://www.welcometothejungle.com/fr/companies/maki/jobs/sotfware-engineer_paris"]
+    #auto_apply.list_of_job_url = ["https://www.welcometothejungle.com/fr/companies/inoco/jobs/developpeur-se-python-fullstack-f-h_paris"]
     if question_mode is False:
         # 3 Send offer link to discord
 
@@ -585,12 +605,14 @@ def apply_script(question_mode=False):
         
         # 4 Parse job offers then apply
         if auto_apply.apply:
-            for job_offer in auto_apply.list_of_job_url:
+            for index , job_offer in enumerate(auto_apply.list_of_job_url):
+                print(f"Job offer {index+1}/{len(auto_apply.list_of_job_url)} url:{job_offer}")
                 auto_apply.parse_and_apply_to_job_offer(job_offer)
 
         #  5 Trying to apply again of job offer that failed
 
-        for job_offer_url_to_retry in auto_apply.list_of_job_url_to_retry:
+        for index , job_offer_url_to_retry in enumerate(auto_apply.list_of_job_url_to_retry):
+            print(f"Job offer retry {index+1}/{len(auto_apply.list_of_job_url_to_retry)} url:{job_offer_url_to_retry}")
             auto_apply.parse_and_apply_to_job_offer(job_offer_url_to_retry)
 
     # 6 Cleanup file

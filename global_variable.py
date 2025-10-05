@@ -26,13 +26,15 @@ info_of_the_job_datatestid:str = "job-metadata-block"
 job_page_url:str = "https://www.welcometothejungle.com/fr/jobs?query="
 job_offer_localisation_datatestid:str = "jobs-home-search-field-location"
 job_offer_first_localisation_xpath:str = "/html/body/div[1]/div/div/div/div[1]/div/div[2]/div/div/div/div/div[2]/div/div[1]/div[2]/div/p"
+job_offer_name_xpath:str = "/html/body/div[1]/div/div/div/div/div[3]/section/div[1]/h2"
 job_offer_question_xpath:str = "/html/body/div[17]/div[2]/div/section/form/fieldset[3]"
 job_offer_question_xpath2:str = "/html/body/div[22]/div[2]/div/section/form/fieldset[3]"
 job_offer_question_xpath3:str = "/html/body/div[18]/div[2]/div/section/form/fieldset[3]"
 job_offer_question_xpath4:str = "/html/body/div[12]/div[2]/div/section/form/fieldset[3]"
 job_offer_question_xpath5:str = "/html/body/div[13]/div[2]/div/section/form/fieldset[3]"
-job_offer_question_xpath_list:list[str] = [job_offer_question_xpath,job_offer_question_xpath2,job_offer_question_xpath3,job_offer_question_xpath4,job_offer_question_xpath5]
-job_offer_question_xpath_list_special_nb:list[str] = ["17","22","18","12","13"]
+job_offer_question_xpath6:str = "/html/body/div[16]/div[2]/div/section/form/fieldset[3]"
+job_offer_question_xpath_list:list[str] = [job_offer_question_xpath,job_offer_question_xpath2,job_offer_question_xpath3,job_offer_question_xpath4,job_offer_question_xpath5,job_offer_question_xpath6]
+job_offer_question_xpath_list_special_nb:list[str] = ["17","22","18","12","13","16"]
 job_offer_text_xpath:str = "/html/body/div[1]/div/div/div/div/div[3]/section/div[4]/div/div[2]"
 internship_job_url_typing:str = "&refinementList%5Bcontract_type%5D%5B%5D=internship&refinementList%5Bcontract_type%5D%5B%5D=apprenticeship"
 localisation_of_the_job:str = "&aroundQuery="

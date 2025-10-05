@@ -1,6 +1,7 @@
 """File that handle utility functions"""
 import pickle
 from discord_webhook import DiscordWebhook
+from unidecode import unidecode
 
 def write_into_file(path:str, data:str) -> None:
     """Write data into a file"""
@@ -78,3 +79,19 @@ def get_answer_from_question_list(question_to_search:str) -> str:
                 return question.split("#####")[1][1:]
             return question.split("#####")[1]
     return ""
+
+def are_words_inside_list_of_words(text,list_of_text) -> bool:
+    """Check if words are inside a list of words"""
+    list_ = []
+    word_inside = False
+    for txt in (list_of_text):
+        words = unidecode(txt).split(" ")
+        for word in words:
+            if word.lower() in unidecode(text).lower():
+                list_.append(word)
+
+        if " ".join(list_).lower().strip() == unidecode(txt).lower().strip():
+            word_inside = True
+        list_ = []
+
+    return word_inside
