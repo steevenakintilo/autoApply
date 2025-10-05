@@ -3,12 +3,14 @@
 # pylint: disable=C0301
 # pylint: disable=W0702
 
+from datetime import date
+from random import randint
+
 import pickle
 import time
 import traceback
 import yaml
 
-from random import randint
 from selenium.webdriver.common.by import By
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
@@ -247,7 +249,7 @@ class ApplyBot():
                 EC.presence_of_element_located((By.XPATH, current_job_url)))
                 if current_job_url_element.get_property("href") not in self.list_of_job_url and current_job_url_element.get_property("href").lower() not in self.job_already_find:
                     self.list_of_job_url.append(current_job_url_element.get_property("href"))
-                    if len(str(current_job_url_element.get_property("href"))) > 1:
+                    if len(str(current_job_url_element.get_property("href"))) > 5:
                         write_into_file("all_job_url.txt", current_job_url_element.get_property("href") + "\n")
                 time.sleep(0.2)
                 self.scrapping_window.driver.execute_script("arguments[0].scrollIntoView();", current_job_url_element)
@@ -270,6 +272,7 @@ class ApplyBot():
     def parse_and_apply_to_job_offer(self,job_offer_url,):
         """Parsing job offer then apply"""
         try:
+            today = date.today()
             if job_offer_url.lower() in self.list_of_applied_job:
                 return
             if self.question_mode and job_offer_url.lower() in self.list_of_job_question_answered:
@@ -534,41 +537,52 @@ class ApplyBot():
                 self.scrapping_window.driver.execute_script("arguments[0].scrollIntoView();", apply_to_the_job_element)
                 apply_to_the_job_element.click()
                 time.sleep(wait_time)
+
+                skip_cover = False
                 try:
-                    apply_to_the_job_element = WebDriverWait(self.scrapping_window.driver,wait_time - 6).until(
-                    EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-testid="{apply_to_the_job_datatestid}"]')))
+                    good_apply_element = WebDriverWait(self.scrapping_window.driver,wait_time - 6).until(
+                    EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-testid="{good_apply_datatestid}"]')))
+                    time.sleep(0.5)
+                    print("niiiceeeee")
+                except:
+                    skip_cover = True
+                
+                try:
+                    if skip_cover:
+                        apply_to_the_job_element = WebDriverWait(self.scrapping_window.driver,wait_time - 6).until(
+                        EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-testid="{apply_to_the_job_datatestid}"]')))
 
-                    #print("Cover letter needed")
+                        #print("Cover letter needed")
+                        
+                        if self.skip_cover_letter:
+                            send_message_discord(f"Can't apply to this job because you choose to skip job where a cover letter is needed {job_offer_url}",discord_job_banned)
+                            return
+                        question_to_ask_to_chatgpt = f"From my resume and the text of this job offer can you generate a {self.covert_letter_lenght} cover letter without mentioning the subject of the cover letter the city or the date of the day and just put the text of the cover letter without adding your own opinions/texts and be humble and personal in the cover letter generate the text in {self.language} resume:\n {self.resume_text} \n job description:\n {job_offer_text_element.text} just return the cover letter don't add your own text or thinking just the text of the cover letter!!!"
+                        cover_letter_text = maker([question_to_ask_to_chatgpt])
+                        if len(str(cover_letter_text)) < 30:
+                            if job_offer_url in self.list_of_job_url_to_retry:
+                                send_message_discord(f"Apply error on this job offer {job_offer_url} because the bot failed to generate the cover letter",discord_job_error)
+                            if job_offer_url not in self.list_of_job_url_to_retry:
+                                self.list_of_job_url_to_retry.append(job_offer_url)
+                            return
 
-                    if self.skip_cover_letter:
-                        send_message_discord(f"Can't apply to this job because you choose to skip job where a cover letter is needed {job_offer_url}",discord_job_banned)
-                        return
-                    question_to_ask_to_chatgpt = f"From my resume and the text of this job offer can you generate a {self.covert_letter_lenght} cover letter without mentioning the subject of the cover letter the city or the date of the day and just put the text of the cover letter without adding your own opinions/texts and be humble and personal in the cover letter generate the text in {self.language} resume:\n {self.resume_text} \n job description:\n {job_offer_text_element.text} just return the cover letter don't add your own text or thinking just the text of the cover letter!!!"
-                    cover_letter_text = maker([question_to_ask_to_chatgpt])
-                    if len(str(cover_letter_text)) < 30:
-                        if job_offer_url in self.list_of_job_url_to_retry:
-                            send_message_discord(f"Apply error on this job offer {job_offer_url} because the bot failed to generate the cover letter",discord_job_error)
-                        if job_offer_url not in self.list_of_job_url_to_retry:
-                            self.list_of_job_url_to_retry.append(job_offer_url)
-                        return
-
-                    if self.print_cover_letter:
-                        send_message_discord(f"Generated Cover Letter:\n {cover_letter_text} \n link of the job offer: {job_offer_url}",discord_cover_letter)
-                        self.list_of_job_url_question_to_answer.append(job_offer_url)
-                        return
-                                        
-                    if len(str(cover_letter_text)) > 30:
-                        cover_letter_element = WebDriverWait(self.scrapping_window.driver,wait_time - 6).until(
-                        EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-testid="{cover_letter_datatestid}"]')))
-                        time.sleep(0.5)
-                        self.scrapping_window.driver.execute_script("arguments[0].scrollIntoView();", cover_letter_element)
-                        time.sleep(1)
-                        cover_letter_element.send_keys(cover_letter_text)
-                        time.sleep(3)
-                        self.scrapping_window.driver.execute_script("arguments[0].scrollIntoView();", apply_to_the_job_element)
-                        time.sleep(0.5)
-                        apply_to_the_job_element.click()
-                        time.sleep(2)
+                        if self.print_cover_letter:
+                            send_message_discord(f"Generated Cover Letter:\n {cover_letter_text} \n link of the job offer: {job_offer_url}",discord_cover_letter)
+                            self.list_of_job_url_question_to_answer.append(job_offer_url)
+                            return
+                                            
+                        if len(str(cover_letter_text)) > 30:
+                            cover_letter_element = WebDriverWait(self.scrapping_window.driver,wait_time - 6).until(
+                            EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-testid="{cover_letter_datatestid}"]')))
+                            time.sleep(0.5)
+                            self.scrapping_window.driver.execute_script("arguments[0].scrollIntoView();", cover_letter_element)
+                            time.sleep(1)
+                            cover_letter_element.send_keys(cover_letter_text)
+                            time.sleep(3)
+                            self.scrapping_window.driver.execute_script("arguments[0].scrollIntoView();", apply_to_the_job_element)
+                            time.sleep(0.5)
+                            apply_to_the_job_element.click()
+                            time.sleep(2)
 
                 except:
                     if self.print_error:
@@ -585,9 +599,10 @@ class ApplyBot():
 
             if self.question_mode is False:
                 write_into_file("list_of_applied_job.txt" , job_offer_url.lower() + "\n")
+                write_into_file("list_of_applied_job_date.txt" , str(today.strftime("%d/%m/%Y")) + " " + job_offer_url.lower() + "\n")
                 send_message_discord(f"I have applied to this job offer! {job_offer_url}" , discord_apply_sucess)
                 if len(list_of_question) == 0:
-                    time.sleep(randint(10,20))
+                    time.sleep(randint(1,20))
             self.apply_good+=1
         except Exception as e:
             if "Message: unknown error: net::ERR_INTERNET_DISCONNECTED" in str(e):
@@ -639,8 +654,10 @@ def apply_script(question_mode=False):
 
         # 5 Send offer link to discord
         
-        send_message_discord(f"Hello the bot have found today {len(auto_apply.list_of_job_url)} jobs offers \n {len(auto_apply.list_of_job_inside_welcome_to_the_jungle_url)} inside welcome to the jungle \n {len(auto_apply.list_of_job_outside_welcome_to_the_jungle_url)} outside welcome to the jungle")
-        
+        if len(auto_apply.list_of_job_url_to_retry) == 0:
+            send_message_discord("The bot have found 0 job offer maybe try to change the configuration.yml to find more job such as more jobs into job_keyword_list or more town inside where_is_the_job...")
+        else:
+            send_message_discord(f"Hello the bot have found today {len(auto_apply.list_of_job_url)} jobs offers \n {len(auto_apply.list_of_job_inside_welcome_to_the_jungle_url)} inside welcome to the jungle \n {len(auto_apply.list_of_job_outside_welcome_to_the_jungle_url)} outside welcome to the jungle")
         for url in auto_apply.list_of_job_inside_welcome_to_the_jungle_url:
             send_message_discord(f"New job! {url}", discord_job_inside)
         for url in auto_apply.list_of_job_outside_welcome_to_the_jungle_url:
@@ -659,7 +676,7 @@ def apply_script(question_mode=False):
     reset_file("all_job_url.txt")
 
     for job_url in list_of_all_job_url:
-        if job_url.lower() not in auto_apply.list_of_job_url_question_to_answer:
+        if job_url.lower() not in auto_apply.list_of_job_url_question_to_answer and len(job_url) > 5:
             write_into_file("all_job_url.txt",job_url.lower()+"\n")
 
     # 8 Bye bye

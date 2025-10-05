@@ -30,16 +30,16 @@ number_of_page_to_search: 5
 
 # The maximum number of offer you want to go through
 
-maximum_number_of_offer: 5
+maximum_number_of_offer: 1
 
 # Town of the country where you want to search jobs put "anywhere" to apply to any town of your country
 
 where_is_the_job: 
-  - "paris"
+  - "anywhere"
 
-# Country of the job
+# Country of the job or departement
 
-country_of_the_job: "France"
+country_of_the_job: "Île-de-France"
 
 # If those words are in the question of the offer the bot won't apply
 
@@ -73,7 +73,7 @@ skip_cover_letter: False
 
 # If print error is set to True the bot will print all the error that happend
 
-print_error: False
+print_error: True
 
 # If this is set to False the bot will only send job url to discord and won't apply
 
