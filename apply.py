@@ -473,10 +473,12 @@ class ApplyBot():
 
                                 if skip is False:
                                     answer = get_answer_from_question_list(text)
+                                    #if answer == "":
+
                                     if (answer == "skip" or "skip" in answer):
                                         send_message_discord(f"Can't apply to this job because I don't want to answer the questions {job_offer_url}",discord_job_error)
                                     
-                                    if job_offer_url not in cant_apply_job_list:
+                                    if answer == "":
                                         send_message_discord(f"Can't apply to this job because I don't have answer to the question {job_offer_url}",discord_job_error)
                                         cant_apply_job_list.append(job_offer_url)
                                     try:
