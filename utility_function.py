@@ -61,7 +61,8 @@ def send_message_discord(msg:str,weebhook_nb:int=0) -> None:
     # nb = 4 for job apply error
     # nb = 5 for job apply success
     # nb = 6 for new questions
-
+    # nb = 7 for cover letter
+    
     discord_url = print_file_content("discordWebhookUrl.txt").split("\n")
     try:
         webhook = DiscordWebhook(url=discord_url[weebhook_nb], content=msg)

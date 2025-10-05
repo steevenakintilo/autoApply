@@ -77,7 +77,7 @@ class ApplyBot():
         self.list_of_job_question_answered:list[str] = print_file_content("list_of_job_question_answered.txt").lower().split("\n")
         self.country_of_the_job:str = self.configuration_file_data["country_of_the_job"]
         self.apply_to_offer_who_have_job_keyword_list_element_in_their_name:bool = self.configuration_file_data["apply_to_offer_who_have_job_keyword_list_element_in_their_name"]
-
+        self.print_cover_letter = self.configuration_file_data["print_cover_letter"]
     def login(self) -> bool:
         """Login to Welcome to the jungle"""
         try:
@@ -117,6 +117,22 @@ class ApplyBot():
             try:
                 accept_cookies_xpath_element = WebDriverWait(self.scrapping_window.driver,wait_time).until(
                 EC.presence_of_element_located((By.XPATH, accept_cookies_xpath)))
+                accept_cookies_xpath_element.click()
+                time.sleep(wait_time2)
+            except:
+                pass
+            time.sleep(wait_time2)
+            try:
+                accept_cookies_xpath_element = WebDriverWait(self.scrapping_window.driver,wait_time).until(
+                EC.presence_of_element_located((By.XPATH, accept_cookies_xpath2)))
+                accept_cookies_xpath_element.click()
+                time.sleep(wait_time2)
+            except:
+                pass
+            time.sleep(wait_time2)
+            try:
+                accept_cookies_xpath_element = WebDriverWait(self.scrapping_window.driver,wait_time).until(
+                EC.presence_of_element_located((By.ID, accept_cookies_id)))
                 accept_cookies_xpath_element.click()
                 time.sleep(wait_time2)
             except:
@@ -377,6 +393,7 @@ class ApplyBot():
   
                 if job_offer_xpath_nb != 999 or question_word_found:
                     if self.skip_question:
+                        send_message_discord(f"Can't apply to this job because you choose to skip job where a question is needed {job_offer_url}",discord_job_banned)
                         return
                     
                     if job_offer_xpath_nb < 0:
@@ -523,16 +540,22 @@ class ApplyBot():
                     #print("Cover letter needed")
 
                     if self.skip_cover_letter:
+                        send_message_discord(f"Can't apply to this job because you choose to skip job where a cover letter is needed {job_offer_url}",discord_job_banned)
                         return
                     question_to_ask_to_chatgpt = f"From my resume and the text of this job offer can you generate a {self.covert_letter_lenght} cover letter without mentioning the subject of the cover letter the city or the date of the day and just put the text of the cover letter without adding your own opinions/texts and be humble and personal in the cover letter generate the text in {self.language} resume:\n {self.resume_text} \n job description:\n {job_offer_text_element.text} just return the cover letter don't add your own text or thinking just the text of the cover letter!!!"
                     cover_letter_text = maker([question_to_ask_to_chatgpt])
-                    #print(cover_letter_text)
                     if len(str(cover_letter_text)) < 30:
                         if job_offer_url in self.list_of_job_url_to_retry:
                             send_message_discord(f"Apply error on this job offer {job_offer_url} because the bot failed to generate the cover letter",discord_job_error)
                         if job_offer_url not in self.list_of_job_url_to_retry:
                             self.list_of_job_url_to_retry.append(job_offer_url)
                         return
+
+                    if self.print_cover_letter:
+                        send_message_discord(f"Generated Cover Letter:\n {cover_letter_text} \n link of the job offer: {job_offer_url}",discord_cover_letter)
+                        self.list_of_job_url_question_to_answer.append(job_offer_url)
+                        return
+                                        
                     if len(str(cover_letter_text)) > 30:
                         cover_letter_element = WebDriverWait(self.scrapping_window.driver,wait_time - 6).until(
                         EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-testid="{cover_letter_datatestid}"]')))
@@ -598,10 +621,12 @@ def apply_script(question_mode=False):
 
     auto_apply.search_job_offers()
 
-    #auto_apply.list_of_job_url = ["https://www.welcometothejungle.com/fr/companies/inoco/jobs/developpeur-se-python-fullstack-f-h_paris"]
+    #auto_apply.list_of_job_url = ["https://www.welcometothejungle.com/fr/companies/step-consulting/jobs/developpeur-python-full-stack_grenoble"]
     if question_mode is False:
         # 3 Send offer link to discord
-
+        print(auto_apply.list_of_job_inside_welcome_to_the_jungle_url)
+        print(auto_apply.list_of_job_outside_welcome_to_the_jungle_url)
+        
         send_message_discord(f"Hello the bot have found today {len(auto_apply.list_of_job_url)} jobs offers \n {len(auto_apply.list_of_job_inside_welcome_to_the_jungle_url)} inside welcome to the jungle \n {len(auto_apply.list_of_job_outside_welcome_to_the_jungle_url)} outside welcome to the jungle")
         
         for url in auto_apply.list_of_job_inside_welcome_to_the_jungle_url:

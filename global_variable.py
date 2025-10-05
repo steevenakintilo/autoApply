@@ -5,6 +5,8 @@
 
 accept_content_datatestid:str = "apply-form-consent"
 accept_cookies_xpath:str = "/html/body/div[2]/div/div/div[1]/div[2]/button[3]"
+accept_cookies_xpath2:str = "/html/body/div[13]/div/div/div[1]/div[2]/button[3]"
+accept_cookies_id:str = "axeptio_btn_acceptAll"
 apply_form_datatestid:str = "apply-form-modal"
 apply_to_the_job_datatestid:str = "apply-form-submit"
 apply_button_data_testid:str = "job_header-button-apply"
@@ -20,10 +22,11 @@ discord_job_banned = 3
 discord_job_error = 4
 discord_apply_sucess = 5
 discord_question = 6
+discord_cover_letter = 7
 found_offer_datatestid:str = "search-results"
 grid_view_xpath:str = "/html/body/div[1]/div/div/div/div[3]/div/div[2]/div[2]/div[2]/button[2]"
 info_of_the_job_datatestid:str = "job-metadata-block"
-job_page_url:str = "https://www.welcometothejungle.com/fr/jobs?query="
+job_page_url:str = "https://www.welcometothejungle.com/jobs?query="
 job_offer_localisation_datatestid:str = "jobs-home-search-field-location"
 job_offer_first_localisation_xpath:str = "/html/body/div[1]/div/div/div/div[1]/div/div[2]/div/div/div/div/div[2]/div/div[1]/div[2]/div/p"
 job_offer_name_xpath:str = "/html/body/div[1]/div/div/div/div/div[3]/section/div[1]/h2"

@@ -57,7 +57,10 @@ def maker(questions):
       time.sleep(1)
       ans = while_loop(S,questions_list[i])
       ans_list.append(ans)
-    S.driver.close()
+    try:
+      S.driver.close()
+    except:
+      return ""
     return ans_list[1:]
 
 
@@ -74,10 +77,26 @@ def scrapping(S, query,mode,nb,stop=0):
 
     S.driver.implicitly_wait(15)
     if stop >= 3:
-      print("Too many errors happend closing ScrapGPT")
-      quit()
+      #print("Too many errors happend closing ScrapGPT")
+      try:
+        S.driver.close()
+      except:
+        return ""
+
+      return ""
     
     S.driver.get(S.mainpage)
+    time.sleep(5)
+
+
+    try:
+      accept_cookies_xpath_element = WebDriverWait(S.driver,5).until(
+      EC.presence_of_element_located((By.XPATH, "/html/body/div[1]/div[2]/div/div[2]/button[3]")))
+      accept_cookies_xpath_element.click()
+      time.sleep(5)
+    except:
+      pass
+
     if nb > 0:
       nb = nb - 1
     
@@ -99,25 +118,30 @@ def scrapping(S, query,mode,nb,stop=0):
     actions.send_keys(Keys.RETURN).perform()
     time.sleep(10)
     
-    for i in range(15):
+    for i in range(25):
       get_url = S.driver.current_url
       if "https://chat.openai.com/auth/login" in get_url:
-        print("Wrong email or password change it on configuration.yml file")
-        exit()
+        #print("Wrong email or password change it on configuration.yml file")
+        try:
+          S.driver.close()
+        except:
+          return ""
+
+        return ""
       try:
         element = S.driver.find_element(By.XPATH, '[data-testid="stop-button"]')
-        time.sleep(10)
+        time.sleep(12)
       except Exception as e:
         pass
     try:
       try:
-        element = WebDriverWait(S.driver, 9).until(
+        element = WebDriverWait(S.driver, 5).until(
         EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-testid="conversation-turn-{nb}"]')))
         answer = S.driver.find_element(By.CSS_SELECTOR,f'[data-testid="conversation-turn-{nb}"]')
         answer = answer.text
         return (answer.replace("ChatGPT",""))
       except:
-          element = WebDriverWait(S.driver, 9).until(
+          element = WebDriverWait(S.driver, 5).until(
           EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-testid="conversation-turn-{nb+1}"]')))
           answer = S.driver.find_element(By.CSS_SELECTOR,f'[data-testid="conversation-turn-{nb+1}"]')
           answer = answer.text
@@ -126,8 +150,8 @@ def scrapping(S, query,mode,nb,stop=0):
       if stop >= 3:
         return ""
       if "Message: unknown error: net::ERR_INTERNET_DISCONNECTED" in str(e):
-        print("No connection sleeping for 5 minutes")
-        time.sleep(300)
+        #print("No connection sleeping for 30 secondes")
+        time.sleep(30)
         stop+=1
         scrapping(S,query,mode,nb,stop)
       elif "element = WebDriverWait(S.driver, 9).until(" in str(e):
@@ -136,8 +160,15 @@ def scrapping(S, query,mode,nb,stop=0):
         stop+=1
         scrapping(S,query,mode,nb,stop)
       else:
-        print("An error happend try again")
+        #print("An error happend try again")
         stop+=1
         scrapping(S,query,mode,nb,stop)
-        S.driver.close()
-      S.driver.close()
+        try:
+          S.driver.close()
+        except:
+          return ""
+      
+        try:
+          S.driver.close()
+        except:
+          return ""
