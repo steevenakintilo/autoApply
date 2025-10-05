@@ -73,7 +73,7 @@ skip_cover_letter: False
 
 # If print error is set to True the bot will print all the error that happend
 
-print_error: True
+print_error: False
 
 # If this is set to False the bot will only send job url to discord and won't apply
 
