@@ -36,8 +36,17 @@ job_offer_question_xpath3:str = "/html/body/div[18]/div[2]/div/section/form/fiel
 job_offer_question_xpath4:str = "/html/body/div[12]/div[2]/div/section/form/fieldset[3]"
 job_offer_question_xpath5:str = "/html/body/div[13]/div[2]/div/section/form/fieldset[3]"
 job_offer_question_xpath6:str = "/html/body/div[16]/div[2]/div/section/form/fieldset[3]"
-job_offer_question_xpath_list:list[str] = [job_offer_question_xpath,job_offer_question_xpath2,job_offer_question_xpath3,job_offer_question_xpath4,job_offer_question_xpath5,job_offer_question_xpath6]
-job_offer_question_xpath_list_special_nb:list[str] = ["17","22","18","12","13","16"]
+job_offer_question_xpath7:str = "/html/body/div[21]/div[2]/div/section/form/fieldset[3]"
+job_offer_question_xpath8:str = "/html/body/div[14]/div[2]/div/section/form/fieldset[3]"
+job_offer_question_xpath9:str = "/html/body/div[20]/div[2]/div/section/form/fieldset[3]"
+job_offer_question_xpath10:str = "/html/body/div[15]/div[2]/div/section/form/fieldset[3]"
+job_offer_question_xpath11:str = "/html/body/div[23]/div[2]/div/section/form/fieldset[3]"
+job_offer_question_xpath12:str = "/html/body/div[16]/div[2]/div/section/form/fieldset[3]"
+job_offer_question_xpath13:str = "/html/body/div[19]/div[2]/div/section/form/fieldset[3]"
+job_offer_question_xpath14:str = "/html/body/div[20]/div[2]/div/section/form/fieldset[3]"
+job_offer_question_xpath_list:list[str] = [job_offer_question_xpath,job_offer_question_xpath2,job_offer_question_xpath3,job_offer_question_xpath4,job_offer_question_xpath5,job_offer_question_xpath6,job_offer_question_xpath7,job_offer_question_xpath8,
+                                            job_offer_question_xpath9,job_offer_question_xpath10,job_offer_question_xpath11,job_offer_question_xpath12,job_offer_question_xpath13,job_offer_question_xpath14]
+job_offer_question_xpath_list_special_nb:list[str] = ["17","22","18","12","13","16","21","14","20","15","23","16","19","20"]
 job_offer_text_xpath:str = "/html/body/div[1]/div/div/div/div/div[3]/section/div[4]/div/div[2]"
 internship_job_url_typing:str = "&refinementList%5Bcontract_type%5D%5B%5D=internship&refinementList%5Bcontract_type%5D%5B%5D=apprenticeship"
 localisation_of_the_job:str = "&aroundQuery="

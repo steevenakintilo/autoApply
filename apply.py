@@ -380,7 +380,7 @@ class ApplyBot():
 
                 for i , job_xpath in enumerate(job_offer_question_xpath_list):
                     try:
-                        job_offer_question_element = WebDriverWait(self.scrapping_window.driver,wait_time - 6).until(
+                        job_offer_question_element = WebDriverWait(self.scrapping_window.driver,wait_time - 7).until(
                         EC.presence_of_element_located((By.XPATH, job_xpath)))
                         job_offer_xpath_nb = i
                         #print(job_xpath)
@@ -442,7 +442,7 @@ class ApplyBot():
                             if len(text) > 5:
                                 
                                 if text.lower() not in str(self.list_of_questions) and text.lower() not in self.list_of_questions_find:
-                                    print(text,job_offer_url)
+                                    #print(text,job_offer_url)
                                     write_into_file("list_of_questions.txt",text.lower()+"#####"+"\n")
                                     self.list_of_questions.append(text.lower())
 
@@ -508,10 +508,11 @@ class ApplyBot():
 
             except:
                 if self.print_error:
-                    print("Error part 2")
                     traceback.print_exc()
-                    print(job_offer_url)
-                    print(list_of_question)
+                    # print("Error part 2")
+                    # traceback.print_exc()
+                    # print(job_offer_url)
+                    # print(list_of_question)
             if skip:
                 return
             # Accept consent
@@ -570,7 +571,8 @@ class ApplyBot():
                         time.sleep(2)
 
                 except:
-                    traceback.print_exc()
+                    if self.print_error:
+                        traceback.print_exc()
                     pass
             #print("well done")
 

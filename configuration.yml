@@ -6,7 +6,7 @@ welcome_to_the_jungle_username: ""
 
 welcome_to_the_jungle_password: ""
 
-# Job keyword list
+# Job keyword list (terms used to find / filter job offers)
 
 job_keyword_list:
   - "developpeur python"
@@ -15,8 +15,7 @@ job_keyword_list:
   - "développeur frontend"
   - "développeur fullstack"
   
-  
-  
+
 # If is_internship is set to false the bot will look for permanent contract otherwise he will search for internship
 
 is_internship: False
@@ -33,11 +32,10 @@ number_of_page_to_search: 5
 
 maximum_number_of_offer: 5
 
-# Where you want to search jobs list of town put "anywhere" to apply to any town of your country
+# Town of the country where you want to search jobs put "anywhere" to apply to any town of your country
 
 where_is_the_job: 
-  - "Île-de-France"
-  - "Paris"
+  - "paris"
 
 # Country of the job
 
@@ -46,11 +44,12 @@ country_of_the_job: "France"
 # If those words are in the question of the offer the bot won't apply
 
 forbiden_words_job_offer_question:
-  - "devops"
+  - "devopops"
 
 # If those words are in the text of the offer the bot won't apply
 
 forbiden_words_job_offer_text:
+  - "java"
 
 # Your current post
 
@@ -83,3 +82,6 @@ apply: True
 # If this is set to true the bot will only apply to job that got job_keyword_list inside the job offer name
 
 apply_to_offer_who_have_job_keyword_list_element_in_their_name: False
+
+# If this is set to True the bot won't apply to the job offer and it will send a discord message with the cover letter and the url of the job offer so you can see how the cover letter look
+print_cover_letter: False
