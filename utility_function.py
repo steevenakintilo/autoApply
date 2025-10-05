@@ -84,13 +84,14 @@ def are_words_inside_list_of_words(text,list_of_text) -> bool:
     """Check if words are inside a list of words"""
     list_ = []
     word_inside = False
+    text = text.replace("-","")
     for txt in (list_of_text):
         words = unidecode(txt).split(" ")
         for word in words:
-            if word.lower() in unidecode(text).lower():
-                list_.append(word)
+            if word.lower().replace("-","") in unidecode(text).replace("-","").lower():
+                list_.append(word.replace("-",""))
 
-        if " ".join(list_).lower().strip() == unidecode(txt).lower().strip():
+        if " ".join(list_).lower().strip().replace("-","") == unidecode(txt).lower().strip().replace("-",""):
             word_inside = True
         list_ = []
 
