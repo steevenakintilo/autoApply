@@ -304,12 +304,15 @@ class ApplyBot():
             except TypeError:
                 good_town = True
             
-            if "anywhere" in self.where_is_the_job:
+            if "anywhere" in self.where_is_the_job or "anywhere" in str(self.where_is_the_job):
                 good_town = True
             
             if self.question_mode:
                 good_town = True
             if good_town is False:
+                send_message_discord(f"Can't apply to this job because the job offer is not from a city you provided {job_offer_url}",discord_job_banned)
+                write_into_file("wrong_town.txt",job_offer_url)
+                self.skipped_apply+=1
                 return
             try:
                 apply_button_data_testid_element = WebDriverWait(self.scrapping_window.driver,wait_time).until(
@@ -509,7 +512,7 @@ class ApplyBot():
                                 if text.lower() not in str(self.list_of_questions_find):
                                     write_into_file("list_of_questions.txt",text.lower()+"#####"+"\n")
                                     self.list_of_questions.append(text.lower())
-                                    send_message_discord(f"Answer and add this question to all_questions.txt file with the answer\n {text}", discord_question)
+                                    send_message_discord(f"Answer and add this question to all_questions.txt file with the answer\n {text} {job_offer_url}", discord_question)
                                     self.list_of_job_url_question_to_answer.append(job_offer_url.lower())
                                     skip = True
 
@@ -582,7 +585,19 @@ class ApplyBot():
                             send_message_discord(f"Can't apply to this job because you choose to skip job where a cover letter is needed {job_offer_url}",discord_job_banned)
                             return
                         question_to_ask_to_chatgpt = f"From my resume and the text of this job offer can you generate a {self.covert_letter_lenght} cover letter without mentioning the subject of the cover letter the city or the date of the day and just put the text of the cover letter without adding your own opinions/texts and be humble and personal in the cover letter generate the text in {self.language} resume:\n {self.resume_text} \n job description:\n {job_offer_text_element.text} just return the cover letter don't add your own text or thinking just the text of the cover letter!!!"
-                        cover_letter_text = maker([question_to_ask_to_chatgpt])
+                        
+                        try:
+                            cover_letter_text = maker([question_to_ask_to_chatgpt])
+                        except:
+                            traceback.print_exc()
+                            if job_offer_url not in self.list_of_job_url_to_retry:
+                                self.list_of_job_url_to_retry.append(job_offer_url)
+                                return
+                            elif job_offer_url in self.list_of_job_url_to_retry and self.question_mode is False:  
+                                send_message_discord(f"Apply error on this job offer because of the cover letter generation{job_offer_url}",discord_job_error)
+                                self.bad_apply+=1
+                                write_into_file("error_job_url.txt",job_offer_url)
+                                return
                         if len(str(cover_letter_text)) < 30:
                             if job_offer_url in self.list_of_job_url_to_retry:
                                 send_message_discord(f"Apply error on this job offer {job_offer_url} because the bot failed to generate the cover letter",discord_job_error)
@@ -623,6 +638,7 @@ class ApplyBot():
                 elif job_offer_url in self.list_of_job_url_to_retry and self.question_mode is False:  
                     send_message_discord(f"Apply error on this job offer {job_offer_url}",discord_job_error)
                     self.bad_apply+=1
+                    write_into_file("error_job_url.txt",job_offer_url)
             except:
                 pass
 
@@ -647,6 +663,7 @@ class ApplyBot():
                 self.list_of_job_url_to_retry.append(job_offer_url)
             elif job_offer_url in self.list_of_job_url_to_retry and self.question_mode is False:  
                 send_message_discord(f"Apply error on this job offer {job_offer_url}",discord_job_error)
+                write_into_file("error_job_url.txt",job_offer_url)
                 self.bad_apply+=1
 
 
@@ -684,6 +701,11 @@ def apply_script(question_mode=False):
 
         # 5 Send offer link to discord
         
+        send_message_discord("-"*50,discord_job_inside)
+        send_message_discord("-"*50,discord_job_outside)
+        send_message_discord("-"*50,discord_job_error)
+        send_message_discord("-"*50,discord_job_banned)
+        
         if len(auto_apply.list_of_job_url) == 0:
             send_message_discord("The bot have found 0 job offer maybe try to change the configuration.yml to find more job such as more jobs into job_keyword_list or more town inside where_is_the_job...")
         for url in auto_apply.list_of_job_inside_welcome_to_the_jungle_url:
@@ -717,15 +739,18 @@ def apply_script(question_mode=False):
     outside_verb = "was"
     skipped_verb = "was"
 
+    skipped_nb = (len(auto_apply.list_of_job_url) -  (auto_apply.apply_good + len(auto_apply.list_of_job_outside_welcome_to_the_jungle_url) + auto_apply.bad_apply))
+    if skipped_nb < 0:
+        skipped_nb = 0
     if len(auto_apply.list_of_job_outside_welcome_to_the_jungle_url) > 1:
         outside_verb = "were"
-    if len(auto_apply.skipped_apply) > 1:
+    if skipped_nb > 1:
         skipped_verb = "were"
 
     if question_mode is False:
         send_message_discord(f"Among the {len(auto_apply.list_of_job_url)} jobs found:\n {auto_apply.apply_good} went well ✅ \n {len(auto_apply.list_of_job_outside_welcome_to_the_jungle_url)} {outside_verb} outside welcome to the jungle 🟦 \n {auto_apply.skipped_apply} {skipped_verb} skipped 🟧 \n {auto_apply.bad_apply} went bad ❌",discord_stat)
         send_message_discord("-"*50,discord_stat)
-        print(f"Among the {len(auto_apply.list_of_job_url)} jobs found:\n {auto_apply.apply_good} went well ✅ \n {len(auto_apply.list_of_job_outside_welcome_to_the_jungle_url)} {outside_verb} outside welcome to the jungle 🟦 \n {auto_apply.skipped_apply} {skipped_verb} skipped 🟧 \n {auto_apply.bad_apply} went bad ❌")
+        print(f"Among the {len(auto_apply.list_of_job_url)} jobs found:\n {auto_apply.apply_good} went well ✅ \n {len(auto_apply.list_of_job_outside_welcome_to_the_jungle_url)} {outside_verb} outside welcome to the jungle 🟦 \n {skipped_nb} {skipped_verb} skipped 🟧 \n {auto_apply.bad_apply} went bad ❌")
         print("-"*50)
     if question_mode:
         print("Answer to the question inside list_of_questions.txt file")
