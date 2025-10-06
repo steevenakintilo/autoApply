@@ -453,6 +453,7 @@ class ApplyBot():
                                 if text.lower() not in str(self.list_of_questions) and text.lower() not in self.list_of_questions_find:
                                     #print(text,job_offer_url)
                                     print("Question found:" , text , job_offer_url)
+                                    send_message_discord("Question found: " + text , job_offer_url)
                                     write_into_file("list_of_questions.txt",text.lower()+"#####"+"\n")
                                     self.list_of_questions.append(text.lower())
 
