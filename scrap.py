@@ -19,7 +19,7 @@ class Scraper:
     options = uc.ChromeOptions()
     options.add_experimental_option(
     "prefs", {"credentials_enable_service": False, "profile.password_manager_enabled": False})
-    #options.add_argument('headless')
+    options.add_argument('headless')
     ua = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36'
     options.add_argument(f'--user-agent={ua}') 
     try:
@@ -74,8 +74,6 @@ def while_loop(S,q):
 # No need to login to google an account so we skip this function
 
 def scrapping(S, query,mode,nb,stop=0):
-
-    S.driver.implicitly_wait(15)
     if stop >= 3:
       #print("Too many errors happend closing ScrapGPT")
       try:

@@ -164,7 +164,7 @@ class ApplyBot():
                 job_type = internship_job_url_typing
             for words in self.job_keyword_list:
                 localisation_of_the_job = ""
-                current_job_page = f"{job_page_url}{convert_list_to_correct_url_typing(words)}{job_type}{localisation_of_the_job}"
+                current_job_page = f"{job_page_url}{convert_list_to_correct_url_typing(words)}{job_type}{localisation_of_the_job}{sort_by}"
                 if len(self.list_of_job_url) >= self.maximum_number_of_offer:
                     break
                 try:
@@ -212,7 +212,7 @@ class ApplyBot():
                         time.sleep(wait_time2)
                         try:
                             self.scrapping_window.driver.get(f"{current_job_page}{sort_by}&page={str(page_number+1)}{localisation_of_the_job}")
-                            time.sleep(wait_time)
+                            time.sleep(wait_time)                            
                         except:
                             self.scrapping_window.driver.get(f"{current_job_page}{sort_by}&page={str(page_number+1)}{localisation_of_the_job}")
                             self.scrapping_window.driver.refresh()
@@ -355,9 +355,10 @@ class ApplyBot():
 
             try:
                 for forbiden_word in self.forbiden_words_job_offer_text:
-                    if forbiden_word.lower() in job_offer_text_element.text.lower() and self.question_mode is False:
-                        send_message_discord(f"Can't apply to this job because there is a forbiden word '{forbiden_word}' inside job offer text {job_offer_url}",discord_job_banned)
-                        return
+                    for word in str(self.forbiden_words_job_offer_text).split(" "):
+                        if forbiden_word.lower() == word.lower() and self.question_mode is False:
+                            send_message_discord(f"Can't apply to this job because there is a forbiden word '{forbiden_word}' inside job offer text {job_offer_url}",discord_job_banned)
+                            return
             except TypeError:
                 pass
             
@@ -417,9 +418,11 @@ class ApplyBot():
 
                     try:
                         for forbiden_word in self.forbiden_words_job_offer_question:
-                            if forbiden_word.lower() in str(list_of_question).lower():
-                                send_message_discord(f"Can't apply to this job because there is a forbiden word '{forbiden_word}' inside job offer question {job_offer_url}",discord_job_banned)
-                                return
+                            for question in list_of_question:
+                                for word in question.split(" "):
+                                    if forbiden_word.lower() == word.lower():
+                                        send_message_discord(f"Can't apply to this job because there is a forbiden word '{forbiden_word}' inside job offer question {job_offer_url}",discord_job_banned)
+                                        return
                     except TypeError:
                         pass
                     if self.question_mode:
@@ -549,14 +552,14 @@ class ApplyBot():
 
                 skip_cover = False
                 try:
-                    good_apply_element = WebDriverWait(self.scrapping_window.driver,wait_time - 6).until(
-                    EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-testid="{good_apply_datatestid}"]')))
-                    time.sleep(0.5)
+                    accept_content_element = WebDriverWait(self.scrapping_window.driver,wait_time - 5).until(
+                    EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-testid="{accept_content_datatestid}"]')))
+                    time.sleep(1)
                 except:
                     skip_cover = True
                 
                 try:
-                    if skip_cover:
+                    if skip_cover is False:
                         apply_to_the_job_element = WebDriverWait(self.scrapping_window.driver,wait_time - 6).until(
                         EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-testid="{apply_to_the_job_datatestid}"]')))
 
@@ -601,13 +604,17 @@ class ApplyBot():
             try:
                 apply_to_the_job_element = WebDriverWait(self.scrapping_window.driver,wait_time - 5).until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-testid="{apply_to_the_job_datatestid}"]')))
-                send_message_discord(f"Apply error on this job offer {job_offer_url}",discord_job_error)
+                if job_offer_url not in self.list_of_job_url_to_retry:
+                    self.list_of_job_url_to_retry.append(job_offer_url)
+                if job_offer_url in self.list_of_job_url_to_retry and self.question_mode is False:  
+                    send_message_discord(f"Apply error on this job offer {job_offer_url}",discord_job_error)
+                
             except:
                 pass
 
             if self.question_mode is False:
                 write_into_file("list_of_applied_job.txt" , job_offer_url.lower() + "\n")
-                write_into_file("list_of_applied_job_date.txt" , str(today.strftime("%d/%m/%Y")) + " " + job_offer_url.lower() + " " + job_offer_name_element.text + "\n")
+                write_into_file("list_of_applied_job_date.txt" , str(today.strftime("%d/%m/%Y")) + " " + job_offer_url.lower() + "\n")
                 send_message_discord(f"I have applied to this job offer! {job_offer_url}" , discord_apply_sucess)
                 if len(list_of_question) == 0:
                     time.sleep(randint(1,20))
