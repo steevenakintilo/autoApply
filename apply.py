@@ -19,7 +19,8 @@ from selenium.webdriver.common.keys import Keys
 
 from utility_function import *
 from global_variable import *
-from scrap import maker
+from scrap import *
+from gpt import GptScraper
 
 class Scrapper():
     """Selenium window class"""
@@ -518,13 +519,12 @@ class ApplyBot():
 
                                 if skip is False:
                                     answer = get_answer_from_question_list(text)
-                                    #if answer == "":
                                     if (answer == "skip" or "skip" in answer):
                                         send_message_discord(f"Can't apply to this job because I don't want to answer the questions {job_offer_url}",discord_job_banned)
                                         self.skipped_apply+=1
                                         return
-                                    if answer == "":
-                                        send_message_discord(f"Can't apply to this job because I don't have answer to the question {job_offer_url}",discord_job_banned)
+                                    if answer == ""  or answer == "_answer_error_":
+                                        send_message_discord(f"Can't apply to this job because I don't have answer to the question {text} {job_offer_url}",discord_job_banned)
                                         self.skipped_apply+=1
                                         cant_apply_job_list.append(job_offer_url)
                                     try:
@@ -535,6 +535,8 @@ class ApplyBot():
                                         return
                                     time.sleep(0.5)
                                     current_question_element.send_keys(answer)
+                                else:
+                                    print("kpoekpokrepgokrpog " , text)
 
             except:
                 if self.print_error:
@@ -587,7 +589,9 @@ class ApplyBot():
                         question_to_ask_to_chatgpt = f"From my resume and the text of this job offer can you generate a {self.covert_letter_lenght} cover letter without mentioning the subject of the cover letter the city or the date of the day and just put the text of the cover letter without adding your own opinions/texts and be humble and personal in the cover letter generate the text in {self.language} resume:\n {self.resume_text} \n job description:\n {job_offer_text_element.text} just return the cover letter don't add your own text or thinking just the text of the cover letter!!!"
                         
                         try:
-                            cover_letter_text = maker([question_to_ask_to_chatgpt])
+                            chatgpt = GptScraper()
+                            chatgpt.maker([question_to_ask_to_chatgpt])
+                            cover_letter_text = chatgpt.answer_list[0]
                         except:
                             traceback.print_exc()
                             if job_offer_url not in self.list_of_job_url_to_retry:
@@ -602,6 +606,7 @@ class ApplyBot():
                             if job_offer_url in self.list_of_job_url_to_retry:
                                 send_message_discord(f"Apply error on this job offer {job_offer_url} because the bot failed to generate the cover letter",discord_job_error)
                                 self.bad_apply+=1
+                                write_into_file("error_job_url.txt",job_offer_url+"\n")
                             elif job_offer_url not in self.list_of_job_url_to_retry:
                                 self.list_of_job_url_to_retry.append(job_offer_url)
                             return
@@ -618,7 +623,7 @@ class ApplyBot():
                             self.scrapping_window.driver.execute_script("arguments[0].scrollIntoView();", cover_letter_element)
                             time.sleep(1)
                             cover_letter_element.send_keys(cover_letter_text)
-                            time.sleep(3)
+                            time.sleep(8)
                             self.scrapping_window.driver.execute_script("arguments[0].scrollIntoView();", apply_to_the_job_element)
                             time.sleep(0.5)
                             apply_to_the_job_element.click()
@@ -683,9 +688,10 @@ def apply_script(question_mode=False):
 
     # 2 Search job offers
 
-    auto_apply.search_job_offers()
+    #auto_apply.search_job_offers()
 
-    #auto_apply.list_of_job_url = ["https://www.welcometothejungle.com/fr/companies/step-consulting/jobs/developpeur-python-full-stack_grenoble"]
+    #auto_apply.list_of_job_url = ["https://www.welcometothejungle.com/fr/companies/altametris/jobs/developpeur-euse-polyvalent-e-image-3d-cloud"]
+    auto_apply.list_of_job_url = print_file_content("toto.txt").split("\n")
     if question_mode is False:
 
         # 3 If auto apply exit program

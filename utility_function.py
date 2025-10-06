@@ -62,7 +62,7 @@ def send_message_discord(msg:str,weebhook_nb:int=0) -> None:
     # nb = 5 for job apply success
     # nb = 6 for new questions
     # nb = 7 for cover letter
-    
+
     discord_url = print_file_content("discordWebhookUrl.txt").split("\n")
     try:
         webhook = DiscordWebhook(url=discord_url[weebhook_nb], content=msg)
@@ -74,12 +74,15 @@ def get_answer_from_question_list(question_to_search:str) -> str:
     """Get the right answer to the question from the list_of_questions.txt file"""
     list_of_questions_found:list[str] = print_file_content("list_of_questions.txt").lower().split("\n")
     question_to_search = question_to_search.lower()
-    for question in list_of_questions_found:
-        if question_to_search in question:
-            if question.split("#####")[1][0] == " ":
-                return question.split("#####")[1][1:]
-            return question.split("#####")[1]
-    return ""
+    try:
+        for question in list_of_questions_found:
+            if question_to_search in question:
+                if question.split("#####")[1][0] == " ":
+                    return question.split("#####")[1][1:]
+                return question.split("#####")[1]
+        return ""
+    except:
+        return "_answer_error_"
 
 def are_words_inside_list_of_words(text,list_of_text) -> bool:
     """Check if words are inside a list of words"""
