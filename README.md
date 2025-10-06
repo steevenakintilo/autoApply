@@ -93,7 +93,7 @@ To answer a question just put a space and your answer after the ##### like this:
 ```
 
 Inside the file there is 3 types of answer like in the picture:
-<img width="405" height="522" alt="image" src="https://github.com/user-attachments/assets/424c04d6-b2b6-4349-83f1-c8b482b822b8" />
+<img width="879" height="162" alt="image" src="https://github.com/user-attachments/assets/28eb7d6b-38cd-450a-988e-a053620996ef" />
 
 * Questions where you know the answer so just answer it
 * Questions where you don't know the answer but you want to see the job offer to answer it. In this case just don't write anything and on the next run the bot will send you a discord message with the link of the job offer so you will be able to read the offer text and add the answer of the question
