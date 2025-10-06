@@ -535,9 +535,7 @@ class ApplyBot():
                                         return
                                     time.sleep(0.5)
                                     current_question_element.send_keys(answer)
-                                else:
-                                    print("kpoekpokrepgokrpog " , text)
-
+                                
             except:
                 if self.print_error:
                     pass
@@ -721,10 +719,12 @@ def apply_script(question_mode=False):
             write_into_file("list_of_jobs_outside_welcome_to_the_jungle.txt",url+"\n")
 
         #  6 Trying to apply again of job offer that failed
-
+        
+        list_of_all_job_applied_url = print_file_content("list_of_applied_job.txt").lower().split("\n")
         for index , job_offer_url_to_retry in enumerate(auto_apply.list_of_job_url_to_retry):
-            print(f"Job offer retry {index+1}/{len(auto_apply.list_of_job_url_to_retry)} url:{job_offer_url_to_retry}")
-            auto_apply.parse_and_apply_to_job_offer(job_offer_url_to_retry)
+            if job_offer_url_to_retry.lower() not in list_of_all_job_applied_url:
+                print(f"Job offer retry {index+1}/{len(auto_apply.list_of_job_url_to_retry)} url:{job_offer_url_to_retry}")
+                auto_apply.parse_and_apply_to_job_offer(job_offer_url_to_retry)
     else:
         for index , job_offer in enumerate(auto_apply.list_of_job_url):
             print(f"Job offer question looking {index+1}/{len(auto_apply.list_of_job_url)} url:{job_offer}")
@@ -734,6 +734,7 @@ def apply_script(question_mode=False):
 
     remove_doublon_from_list_of_question_file()
     list_of_all_job_url = print_file_content("all_job_url.txt").lower().split("\n")
+    
     reset_file("all_job_url.txt")
 
     for job_url in list_of_all_job_url:
