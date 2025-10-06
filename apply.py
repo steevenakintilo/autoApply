@@ -275,7 +275,7 @@ class ApplyBot():
             today = date.today()
             if job_offer_url.lower() in self.list_of_applied_job:
                 return
-            if self.question_mode and job_offer_url.lower() in self.list_of_job_question_answered:
+            if self.question_mode is True and job_offer_url.lower() in self.list_of_job_question_answered:
                 return
             skip = False
             list_of_question:list[str] = []
@@ -304,6 +304,8 @@ class ApplyBot():
             if "anywhere" in self.where_is_the_job:
                 good_town = True
             
+            if self.question_mode:
+                good_town = True
             if good_town is False:
                 return
             try:
@@ -393,7 +395,10 @@ class ApplyBot():
                 for question_translation in question_in_several_language_list:
                     if question_translation.lower() in str(apply_form_element.text.lower()):
                         question_word_found = True
-  
+                # if job_offer_xpath_nb == 999 and question_word_found is False and self.question_mode:
+                #     print("no question on this offer " , job_offer_url)
+                #     write_into_file("list_of_job_question_answered.txt",job_offer_url+"\n")
+
                 if job_offer_xpath_nb != 999 or question_word_found:
                     if self.skip_question:
                         send_message_discord(f"Can't apply to this job because you choose to skip job where a question is needed {job_offer_url}",discord_job_banned)
@@ -443,9 +448,11 @@ class ApplyBot():
                             time.sleep(2)
 
                             if len(text) > 5:
-                                
+                                if "'!'" in str(list_of_question):
+                                    return
                                 if text.lower() not in str(self.list_of_questions) and text.lower() not in self.list_of_questions_find:
                                     #print(text,job_offer_url)
+                                    print("Question found:" , text , job_offer_url)
                                     write_into_file("list_of_questions.txt",text.lower()+"#####"+"\n")
                                     self.list_of_questions.append(text.lower())
 
@@ -511,7 +518,8 @@ class ApplyBot():
 
             except:
                 if self.print_error:
-                    traceback.print_exc()
+                    pass
+                    # traceback.print_exc()
                     # print("Error part 2")
                     # traceback.print_exc()
                     # print(job_offer_url)
@@ -667,6 +675,10 @@ def apply_script(question_mode=False):
         for index , job_offer_url_to_retry in enumerate(auto_apply.list_of_job_url_to_retry):
             print(f"Job offer retry {index+1}/{len(auto_apply.list_of_job_url_to_retry)} url:{job_offer_url_to_retry}")
             auto_apply.parse_and_apply_to_job_offer(job_offer_url_to_retry)
+    else:
+        for index , job_offer in enumerate(auto_apply.list_of_job_url):
+            print(f"Job offer question looking {index+1}/{len(auto_apply.list_of_job_url)} url:{job_offer}")
+            auto_apply.parse_and_apply_to_job_offer(job_offer)
 
     # 7 Cleanup file
 
@@ -680,7 +692,12 @@ def apply_script(question_mode=False):
 
     # 8 Bye bye
 
-    if question_mode:
+    if question_mode is False:
 
         send_message_discord(f"The bot applied to {auto_apply.apply_good} job offer",discord_stat)
         send_message_discord("bye see you soon",discord_stat)
+
+    if question_mode:
+        print("Answer to the question inside list_of_questions.txt file")
+
+    print("Good bye")
