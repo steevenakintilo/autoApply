@@ -83,7 +83,13 @@ def scrapping(S, query,mode,nb,stop=0):
 
       return ""
     
-    S.driver.get(S.mainpage)
+    try:
+      S.driver.get(S.mainpage)
+    except:
+      time.sleep(5)
+      S.driver.get(S.mainpage)
+      time.sleep(5)
+      S.driver.refresh()      
     time.sleep(5)
 
 

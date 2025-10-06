@@ -80,6 +80,9 @@ class ApplyBot():
         self.country_of_the_job:str = self.configuration_file_data["country_of_the_job"]
         self.apply_to_offer_who_have_job_keyword_list_element_in_their_name:bool = self.configuration_file_data["apply_to_offer_who_have_job_keyword_list_element_in_their_name"]
         self.print_cover_letter = self.configuration_file_data["print_cover_letter"]
+        self.bad_apply:int = 0
+        self.skipped_apply:int = 0
+
     def login(self) -> bool:
         """Login to Welcome to the jungle"""
         try:
@@ -331,6 +334,7 @@ class ApplyBot():
                     EC.presence_of_element_located((By.XPATH, job_offer_name_xpath)))
                     if are_words_inside_list_of_words(job_offer_name_element.text,self.job_keyword_list) is False:
                         send_message_discord(f"Can't apply to this job because the job offer name '{job_offer_name_element.text}' isn't inside job_keyword_list {str(self.job_keyword_list)}{job_offer_url}",discord_job_banned)
+                        self.skipped_apply+=1
                         return
 
                 except:
@@ -358,6 +362,7 @@ class ApplyBot():
                     for word in str(self.forbiden_words_job_offer_text).split(" "):
                         if forbiden_word.lower() == word.lower() and self.question_mode is False:
                             send_message_discord(f"Can't apply to this job because there is a forbiden word '{forbiden_word}' inside job offer text {job_offer_url}",discord_job_banned)
+                            self.skipped_apply+=1
                             return
             except TypeError:
                 pass
@@ -403,6 +408,7 @@ class ApplyBot():
                 if job_offer_xpath_nb != 999 or question_word_found:
                     if self.skip_question:
                         send_message_discord(f"Can't apply to this job because you choose to skip job where a question is needed {job_offer_url}",discord_job_banned)
+                        self.skipped_apply+=1
                         return
                     
                     if job_offer_xpath_nb < 0:
@@ -422,6 +428,7 @@ class ApplyBot():
                                 for word in question.split(" "):
                                     if forbiden_word.lower() == word.lower():
                                         send_message_discord(f"Can't apply to this job because there is a forbiden word '{forbiden_word}' inside job offer question {job_offer_url}",discord_job_banned)
+                                        self.skipped_apply+=1
                                         return
                     except TypeError:
                         pass
@@ -445,6 +452,8 @@ class ApplyBot():
 
                             current_question_element.click()
                             if "choose" in current_question_element.get_attribute("placeholder").lower():
+                                send_message_discord(f"Can't apply to this job because it's a placeholder and not question {job_offer_url}",discord_job_error)
+                                self.skipped_apply+=1
                                 return
                             time.sleep(1)
                             self.scrapping_window.driver.execute_script("arguments[0].scrollIntoView();", current_question_element)
@@ -469,6 +478,7 @@ class ApplyBot():
                                 for forbiden_word in self.forbiden_words_job_offer_question:
                                     if forbiden_word.lower() in text.lower():
                                         send_message_discord(f"Can't apply to this job because there is a forbiden word inside job question: {forbiden_word} {job_offer_url}",discord_job_banned)
+                                        self.skipped_apply+=1
                                         return
                             except TypeError:
                                 pass
@@ -490,6 +500,7 @@ class ApplyBot():
                             current_question_element.click()
                             if "choose" in current_question_element.get_attribute("placeholder").lower():
                                 send_message_discord(f"Can't apply to this job because it's a placeholder and not question {job_offer_url}",discord_job_error)
+                                self.skipped_apply+=1
                                 return
                             time.sleep(1)
                             self.scrapping_window.driver.execute_script("arguments[0].scrollIntoView();", current_question_element)
@@ -505,17 +516,19 @@ class ApplyBot():
                                 if skip is False:
                                     answer = get_answer_from_question_list(text)
                                     #if answer == "":
-
                                     if (answer == "skip" or "skip" in answer):
-                                        send_message_discord(f"Can't apply to this job because I don't want to answer the questions {job_offer_url}",discord_job_error)
-                                    
+                                        send_message_discord(f"Can't apply to this job because I don't want to answer the questions {job_offer_url}",discord_job_banned)
+                                        self.skipped_apply+=1
+                                        return
                                     if answer == "":
-                                        send_message_discord(f"Can't apply to this job because I don't have answer to the question {job_offer_url}",discord_job_error)
+                                        send_message_discord(f"Can't apply to this job because I don't have answer to the question {job_offer_url}",discord_job_banned)
+                                        self.skipped_apply+=1
                                         cant_apply_job_list.append(job_offer_url)
                                     try:
                                         current_question_element.clear()
                                     except:
                                         send_message_discord(f"Can't apply to this job because there is info to check but not question {job_offer_url}",discord_job_error)
+                                        self.skipped_apply+=1
                                         return
                                     time.sleep(0.5)
                                     current_question_element.send_keys(answer)
@@ -573,7 +586,8 @@ class ApplyBot():
                         if len(str(cover_letter_text)) < 30:
                             if job_offer_url in self.list_of_job_url_to_retry:
                                 send_message_discord(f"Apply error on this job offer {job_offer_url} because the bot failed to generate the cover letter",discord_job_error)
-                            if job_offer_url not in self.list_of_job_url_to_retry:
+                                self.bad_apply+=1
+                            elif job_offer_url not in self.list_of_job_url_to_retry:
                                 self.list_of_job_url_to_retry.append(job_offer_url)
                             return
 
@@ -606,9 +620,9 @@ class ApplyBot():
                 EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-testid="{apply_to_the_job_datatestid}"]')))
                 if job_offer_url not in self.list_of_job_url_to_retry:
                     self.list_of_job_url_to_retry.append(job_offer_url)
-                if job_offer_url in self.list_of_job_url_to_retry and self.question_mode is False:  
+                elif job_offer_url in self.list_of_job_url_to_retry and self.question_mode is False:  
                     send_message_discord(f"Apply error on this job offer {job_offer_url}",discord_job_error)
-                
+                    self.bad_apply+=1
             except:
                 pass
 
@@ -626,13 +640,14 @@ class ApplyBot():
                 if job_offer_url in self.list_of_job_url_to_retry and self.question_mode is False:  
                     send_message_discord(f"Apply error on this job offer {job_offer_url} because they were no wifi",discord_job_error)
                 time.sleep(300)
-            
+
+            if self.print_error:
+                traceback.print_exc()            
             if job_offer_url not in self.list_of_job_url_to_retry:
                 self.list_of_job_url_to_retry.append(job_offer_url)
-            if job_offer_url in self.list_of_job_url_to_retry and self.question_mode is False:  
+            elif job_offer_url in self.list_of_job_url_to_retry and self.question_mode is False:  
                 send_message_discord(f"Apply error on this job offer {job_offer_url}",discord_job_error)
-            if self.print_error:
-                traceback.print_exc()
+                self.bad_apply+=1
 
 
 def apply_script(question_mode=False):
@@ -669,14 +684,14 @@ def apply_script(question_mode=False):
 
         # 5 Send offer link to discord
         
-        if len(auto_apply.list_of_job_url_to_retry) == 0:
+        if len(auto_apply.list_of_job_url) == 0:
             send_message_discord("The bot have found 0 job offer maybe try to change the configuration.yml to find more job such as more jobs into job_keyword_list or more town inside where_is_the_job...")
-        else:
-            send_message_discord(f"Hello the bot have found today {len(auto_apply.list_of_job_url)} jobs offers \n {len(auto_apply.list_of_job_inside_welcome_to_the_jungle_url)} inside welcome to the jungle \n {len(auto_apply.list_of_job_outside_welcome_to_the_jungle_url)} outside welcome to the jungle")
         for url in auto_apply.list_of_job_inside_welcome_to_the_jungle_url:
             send_message_discord(f"New job! {url}", discord_job_inside)
+            write_into_file("list_of_jobs_inside_welcome_to_the_jungle.txt",url+"\n")
         for url in auto_apply.list_of_job_outside_welcome_to_the_jungle_url:
             send_message_discord(f"New job! {url}", discord_job_outside)
+            write_into_file("list_of_jobs_outside_welcome_to_the_jungle.txt",url+"\n")
 
         #  6 Trying to apply again of job offer that failed
 
@@ -699,12 +714,19 @@ def apply_script(question_mode=False):
             write_into_file("all_job_url.txt",job_url.lower()+"\n")
 
     # 8 Bye bye
+    outside_verb = "was"
+    skipped_verb = "was"
+
+    if len(auto_apply.list_of_job_outside_welcome_to_the_jungle_url) > 1:
+        outside_verb = "were"
+    if len(auto_apply.skipped_apply) > 1:
+        skipped_verb = "were"
 
     if question_mode is False:
-
-        send_message_discord(f"The bot applied to {auto_apply.apply_good} job offer",discord_stat)
-        send_message_discord("bye see you soon",discord_stat)
-
+        send_message_discord(f"Among the {len(auto_apply.list_of_job_url)} jobs found:\n {auto_apply.apply_good} went well ✅ \n {len(auto_apply.list_of_job_outside_welcome_to_the_jungle_url)} {outside_verb} outside welcome to the jungle 🟦 \n {auto_apply.skipped_apply} {skipped_verb} skipped 🟧 \n {auto_apply.bad_apply} went bad ❌",discord_stat)
+        send_message_discord("-"*50,discord_stat)
+        print(f"Among the {len(auto_apply.list_of_job_url)} jobs found:\n {auto_apply.apply_good} went well ✅ \n {len(auto_apply.list_of_job_outside_welcome_to_the_jungle_url)} {outside_verb} outside welcome to the jungle 🟦 \n {auto_apply.skipped_apply} {skipped_verb} skipped 🟧 \n {auto_apply.bad_apply} went bad ❌")
+        print("-"*50)
     if question_mode:
         print("Answer to the question inside list_of_questions.txt file")
 
