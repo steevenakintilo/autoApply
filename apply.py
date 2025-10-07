@@ -540,6 +540,7 @@ class ApplyBot():
                                         send_message_discord(f"Can't apply to this job because I don't have answer to the question {text} {job_offer_url}",discord_question)
                                         self.skipped_apply+=1
                                         self.list_of_job_url_question_to_answer.append(job_offer_url)
+                                        return
                                     try:
                                         current_question_element.clear()
                                     except:
