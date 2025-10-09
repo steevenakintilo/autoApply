@@ -336,7 +336,13 @@ class ApplyBot():
                 return
 
             self.list_of_job_inside_welcome_to_the_jungle_url.append(job_offer_url)
-            apply_button_data_testid_element.click()
+
+            try:
+                apply_button_data_testid_element.click()
+            except:
+                self.scrapping_window.driver.execute_script("document.body.style.zoom='60%'")
+                time.sleep(2)
+                apply_button_data_testid_element.click()
             time.sleep(wait_time2)
 
             if self.apply_to_offer_who_have_job_keyword_list_element_in_their_name:
@@ -708,7 +714,7 @@ def apply_script(question_mode=False):
 
     auto_apply.search_job_offers()
 
-    #auto_apply.list_of_job_url = ["https://www.welcometothejungle.com/fr/companies/altametris/jobs/developpeur-euse-polyvalent-e-image-3d-cloud"]
+    #auto_apply.list_of_job_url = ["https://www.welcometothejungle.com/fr/companies/fieldbox-ai/jobs/backend-developer-python-django_FIELD_pWbkwgK"]
     if question_mode is False:
 
         # 3 If auto apply exit program
