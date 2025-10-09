@@ -186,21 +186,30 @@ class ApplyBot():
                     grid_view_element.click()
                     grid = True
                     time.sleep(wait_time2)
+                    
+                self.current_url = current_job_page
+                for page_number in range(self.number_of_page_to_search):
+                    print(f"{words} page number: {page_number + 1} number of jobs found {len(self.list_of_job_url)}")
                     job_offer_localisation_element = WebDriverWait(self.scrapping_window.driver,wait_time).until(
                     EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-testid="{job_offer_localisation_datatestid}"]')))
-                    
-                    if job_offer_localisation_element.text.lower() != self.country_of_the_job.lower():
+                    if job_offer_localisation_element.text.lower() != self.country_of_the_job.lower() and page_number == 0:
                         try:
-                            job_offer_localisation_element.click()
+                            self.scrapping_window.driver.execute_script("arguments[0].click();", job_offer_localisation_element)
                             time.sleep(1)
                             job_offer_localisation_element.send_keys(Keys.CONTROL, 'a')
                             job_offer_localisation_element.send_keys(Keys.BACKSPACE)
                             job_offer_localisation_element.send_keys(self.country_of_the_job)
                             time.sleep(1)
-                            job_offer_first_localisation_element = WebDriverWait(self.scrapping_window.driver,wait_time).until(
-                            EC.presence_of_element_located((By.XPATH, job_offer_first_localisation_xpath)))
-                            job_offer_first_localisation_element.click()
-                            time.sleep(wait_time2)
+                            try:
+                                job_offer_first_localisation_element = WebDriverWait(self.scrapping_window.driver,wait_time - 5).until(
+                                EC.presence_of_element_located((By.XPATH, job_offer_first_localisation_xpath)))
+                                self.scrapping_window.driver.execute_script("arguments[0].click();", job_offer_first_localisation_element)
+                                time.sleep(wait_time2)
+                            except:
+                                job_offer_first_localisation_element = WebDriverWait(self.scrapping_window.driver,wait_time - 5).until(
+                                EC.presence_of_element_located((By.XPATH, job_offer_first_localisation_xpath2)))
+                                self.scrapping_window.driver.execute_script("arguments[0].click();", job_offer_first_localisation_element)
+                                time.sleep(wait_time2)
                         except:
                             if self.print_error:
                                 traceback.print_exc()
@@ -208,9 +217,6 @@ class ApplyBot():
                             self.scrapping_window.driver.get(current_job_page)
                             time.sleep(wait_time2)
                     
-
-                self.current_url = current_job_page
-                for page_number in range(self.number_of_page_to_search):
                     if len(self.list_of_job_url) >= self.maximum_number_of_offer:
                         break
                     if page_number != 0:
