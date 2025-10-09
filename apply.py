@@ -776,7 +776,7 @@ def apply_script(question_mode=False):
         skipped_verb = "were"
 
     if question_mode is False:
-        send_message_discord(f"Among the {len(auto_apply.list_of_job_url)} jobs found:\n {auto_apply.apply_good} went well ✅ \n {len(auto_apply.list_of_job_outside_welcome_to_the_jungle_url)} {outside_verb} outside welcome to the jungle 🟦 \n {auto_apply.skipped_apply} {skipped_verb} skipped 🟧 \n {auto_apply.bad_apply} went bad ❌",discord_stat)
+        send_message_discord(f"Among the {len(auto_apply.list_of_job_url)} jobs found:\n {auto_apply.apply_good} went well ✅ \n {len(auto_apply.list_of_job_outside_welcome_to_the_jungle_url)} {outside_verb} outside welcome to the jungle 🟦 \n {skipped_nb} {skipped_verb} skipped 🟧 \n {auto_apply.bad_apply} went bad ❌",discord_stat)
         send_message_discord("-"*50,discord_stat)
         print(f"Among the {len(auto_apply.list_of_job_url)} jobs found:\n {auto_apply.apply_good} went well ✅ \n {len(auto_apply.list_of_job_outside_welcome_to_the_jungle_url)} {outside_verb} outside welcome to the jungle 🟦 \n {skipped_nb} {skipped_verb} skipped 🟧 \n {auto_apply.bad_apply} went bad ❌")
         print("-"*50)
