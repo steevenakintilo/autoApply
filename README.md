@@ -35,7 +35,7 @@ Link to download pip: https://pip.pypa.io/en/stable/installation/
 
 Link to download google chrome: https://www.google.com/intl/fr_fr/chrome/ 
 
-You also need to do 8 discord webhook to recieve all the info inside discord and put the webhook url in discordWebhookUrl.txt
+You also need to do 8 discord webhook to recieve all the info inside discord and put the webhook url in discordWebhookUrl.txt it is not mandatory but it is recommended.
 
 Here is how to do a discord webhook: https://www.svix.com/resources/guides/how-to-make-webhook-discord/
 
@@ -107,6 +107,8 @@ During the run if the bot see a new question that isn't inside the list_of_quest
 After you answer to the specific question the bot will be able to apply to this offer on the next run.
 
 ## Discord webhook
+
+This part is not mandatory but it is strongly recommended to better visualize the offers the bot applied to or the bot to apply for and other statistics.
 In order to have all the right information available anywhere I decided to put them on several discord channels using discord webhook like this:
 <img width="421" height="514" alt="image" src="https://github.com/user-attachments/assets/baa82429-b761-4fda-95d2-3baf5c27e3ef" />
 
