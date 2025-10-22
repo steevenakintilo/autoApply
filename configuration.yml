@@ -9,27 +9,29 @@ welcome_to_the_jungle_password: ""
 # Job keyword list (terms used to find / filter job offers)
 
 job_keyword_list:
-  - "qa automatisation"
+  - "développeur fullstack"
+  - "développeur backend"
+  - "développeur frontend"
+  - "Developper Python"
+  - "backend python"
   - "sélenium"
   - "scraping"
+  - "Backend Python"
+  - "développeur fullstack"
+  - "développeur back end"
+  - "dev python"
+  - "développeur full stack"
+  - "développeur frontend"
+  - "développeur backend end"
+  - "développeur front end"
+  - "Développement Python"
+  - "Backend Python"
   - "QA Analyst"
   - "QA Testeur"
-  - "developpeur python"
+  - "qa automatisation"
   - "ingénieur logiciel python"
   - "Ingénieur python"
-  - "Développement Python"
-  - "Backend Python"
-  - "Developper Python"
-  - "développeur backend"
-  - "développeur fullstack"
-  - "développeur frontend"
-  - "développeur full stack"
-  - "développeur front end"
-  - "développeur frontend"
-  - "Ingénieur python"
-  - "Développement Python"
-  - "Backend Python"
-
+  
 # If is_internship is set to false the bot will look for permanent contract otherwise he will search for internship
 
 is_internship: False
@@ -40,11 +42,11 @@ sort_by_date: False
 
 # number_of_page_to_search is equal to the number the bot will go through for each keyword it can be 1, 4 or even 21
 
-number_of_page_to_search: 5
+number_of_page_to_search: 1
 
 # The maximum number of offer you want to go through
 
-maximum_number_of_offer: 10
+maximum_number_of_offer: 1
 
 # Town of the country where you want to search jobs put "anywhere" to apply to any town of your country
 
@@ -53,7 +55,7 @@ where_is_the_job:
 
 # Country of the job or departement
 
-country_of_the_job: "Île-de-France, France"
+country_of_the_job: "Île-de-France"
 
 # If those words are in the offer name and apply_to_offer_who_have_job_keyword_list_element_in_their_name is set to True the bot won't apply
 
@@ -72,7 +74,7 @@ forbiden_words_job_offer_text:
 
 # Your current post
 
-current_post: "ingénieur logiciel"
+current_post: "Développeur full stack"
 
 # Language needed for cover letter generation for chatgpt
 
@@ -92,7 +94,11 @@ skip_cover_letter: False
 
 # If print error is set to True the bot will print all the error that happend
 
-print_error: False
+print_error: True
+
+# If this is set to False the bot won't send message to discord
+
+send_discord: True
 
 # If this is set to False the bot will only send job url to discord and won't apply
 

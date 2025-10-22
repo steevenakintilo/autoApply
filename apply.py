@@ -84,6 +84,7 @@ class ApplyBot():
         self.bad_apply:int = 0
         self.skipped_apply:int = 0
         self.forbiden_words_job_offer_name = self.configuration_file_data["forbiden_words_job_offer_name"]
+        self.send_discord = self.configuration_file_data["send_discord"]
 
     def login(self) -> bool:
         """Login to Welcome to the jungle"""
@@ -223,11 +224,17 @@ class ApplyBot():
                         time.sleep(wait_time2)
                         try:
                             self.scrapping_window.driver.get(f"{current_job_page}{sort_by}&page={str(page_number+1)}{localisation_of_the_job}")
-                            time.sleep(wait_time)                            
+                            time.sleep(wait_time)                        
                         except:
-                            self.scrapping_window.driver.get(f"{current_job_page}{sort_by}&page={str(page_number+1)}{localisation_of_the_job}")
-                            self.scrapping_window.driver.refresh()
-                            time.sleep(wait_time3)
+                            try:
+                                self.scrapping_window.driver.get(f"{current_job_page}{sort_by}&page={str(page_number+1)}{localisation_of_the_job}")
+                                self.scrapping_window.driver.refresh()
+                                time.sleep(wait_time3)
+                            except:
+                                self.scrapping_window.driver.refresh()
+                                time.sleep(wait_time3)
+                                self.scrapping_window.driver.get(f"{current_job_page}{sort_by}&page={str(page_number+1)}{localisation_of_the_job}")
+                                time.sleep(30)
                     self.get_job_info_by_page()
         except Exception as e:
             if self.print_error:
@@ -280,7 +287,7 @@ class ApplyBot():
                     if self.print_error:
                         traceback.print_exc()
 
-    def parse_and_apply_to_job_offer(self,job_offer_url,):
+    def parse_and_apply_to_job_offer(self,job_offer_url,in_or_out=False):
         """Parsing job offer then apply"""
         try:
             today = date.today()
@@ -333,10 +340,14 @@ class ApplyBot():
 
             if apply_button_data_testid_element.get_property("href") is not None:
                 self.list_of_job_outside_welcome_to_the_jungle_url.append(job_offer_url)
+                if in_or_out:
+                    return -1
                 return
 
+            
             self.list_of_job_inside_welcome_to_the_jungle_url.append(job_offer_url)
-
+            if in_or_out:
+                return 1
             try:
                 apply_button_data_testid_element.click()
             except:
@@ -352,7 +363,7 @@ class ApplyBot():
                     if are_words_inside_list_of_words(job_offer_name_element.text,self.job_keyword_list) is False:
                         send_message_discord(f"Can't apply to this job because the job offer name '{job_offer_name_element.text}' isn't inside job_keyword_list {str(self.job_keyword_list)}{job_offer_url}",discord_job_banned)
                         self.skipped_apply+=1
-                        self.list_of_job_url_question_to_answer.append(job_offer_url)
+                        self.list_of_job_url_question_to_answer.append(job_offer_url.lower())
                         return
 
                 except:
@@ -714,7 +725,8 @@ def apply_script(question_mode=False):
 
     auto_apply.search_job_offers()
 
-    #auto_apply.list_of_job_url = ["https://www.welcometothejungle.com/fr/companies/fieldbox-ai/jobs/backend-developer-python-django_FIELD_pWbkwgK"]
+    # auto_apply.list_of_job_url = ["https://www.welcometothejungle.com/fr/companies/fieldbox-ai/jobs/backend-developer-python-django_FIELD_pWbkwgK"]
+    # auto_apply.list_of_job_url = print_file_content("toto.txt").split("\n")
     if question_mode is False:
 
         # 3 If auto apply exit program
@@ -738,13 +750,11 @@ def apply_script(question_mode=False):
         if len(auto_apply.list_of_job_url) == 0:
             send_message_discord("The bot have found 0 job offer maybe try to change the configuration.yml to find more job such as more jobs into job_keyword_list or more town inside where_is_the_job...")
         for url in auto_apply.list_of_job_inside_welcome_to_the_jungle_url:
-            if url not in auto_apply.list_of_job_inside_welcome_to_the_jungle_url:
-                send_message_discord(f"New job! {url}", discord_job_inside)
-                write_into_file("list_of_jobs_inside_welcome_to_the_jungle.txt",url+"\n")
+            send_message_discord(f"New job! {url}", discord_job_inside)
+            write_into_file("list_of_jobs_inside_welcome_to_the_jungle.txt",url+"\n")
         for url in auto_apply.list_of_job_outside_welcome_to_the_jungle_url:
-            if url not in auto_apply.list_of_job_outside_welcome_to_the_jungle_url:
-                send_message_discord(f"New job! {url}", discord_job_outside)
-                write_into_file("list_of_jobs_outside_welcome_to_the_jungle.txt",url+"\n")
+            send_message_discord(f"New job! {url}", discord_job_outside)
+            write_into_file("list_of_jobs_outside_welcome_to_the_jungle.txt",url+"\n")
 
         #  6 Trying to apply again of job offer that failed
         
