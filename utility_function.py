@@ -63,17 +63,20 @@ def send_message_discord(msg:str,weebhook_nb:int=0) -> None:
     # nb = 5 for job apply success
     # nb = 6 for new questions
     # nb = 7 for cover letter
-    with open("configuration.yml", "r",encoding="utf-8") as file:
-        configuration_file_data = yaml.load(file, Loader=yaml.FullLoader)
-
-    if configuration_file_data["send_discord"] == False:
-        return
-    discord_url = print_file_content("discordWebhookUrl.txt").split("\n")
     try:
-        webhook = DiscordWebhook(url=discord_url[weebhook_nb], content=msg)
-        webhook.execute()
-    except IndexError:
-        pass
+        with open("configuration.yml", "r",encoding="utf-8") as file:
+            configuration_file_data = yaml.load(file, Loader=yaml.FullLoader)
+
+        if configuration_file_data["send_discord"] is False:
+            return
+        discord_url = print_file_content("discordWebhookUrl.txt").split("\n")
+        try:
+            webhook = DiscordWebhook(url=discord_url[weebhook_nb], content=msg)
+            webhook.execute()
+        except IndexError:
+            pass
+    except:
+        return
 
 def get_answer_from_question_list(question_to_search:str) -> str:
     """Get the right answer to the question from the list_of_questions.txt file"""

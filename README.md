@@ -39,6 +39,8 @@ You also need to do 8 discord webhook to recieve all the info inside discord and
 
 Here is how to do a discord webhook: https://www.svix.com/resources/guides/how-to-make-webhook-discord/
 
+After creating your weebhook token put it on the discordWebhookUrl.txt and do it for the 8 of them.
+
 Download all the modules required for the bot to work using this command:
 
 ```bash
@@ -109,6 +111,7 @@ After you answer to the specific question the bot will be able to apply to this 
 ## Discord webhook
 
 This part is not mandatory but it is strongly recommended to better visualize the offers the bot applied to or the bot to apply for and other statistics.
+First you need to create a discord server to see all the data. https://support.discord.com/hc/en-us/articles/204849977-How-do-I-create-a-server
 In order to have all the right information available anywhere I decided to put them on several discord channels using discord webhook like this:
 <img width="421" height="514" alt="image" src="https://github.com/user-attachments/assets/baa82429-b761-4fda-95d2-3baf5c27e3ef" />
 
