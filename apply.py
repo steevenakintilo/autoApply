@@ -90,7 +90,6 @@ class ApplyBot():
         """Login to Welcome to the jungle"""
         try:
             self.scrapping_window.driver.get(login_page_url)
-            time.sleep(wait_time2)
             if len(str(self.cookies_file_data)) > 10:
                 cookies = pickle.load(open("cookies.pkl","rb"))
                 button_to_triger_login_page_element = WebDriverWait(self.scrapping_window.driver,wait_time).until(
@@ -137,6 +136,13 @@ class ApplyBot():
                 time.sleep(wait_time2)
             except:
                 pass
+            try:
+                accept_cookies_xpath_element = WebDriverWait(self.scrapping_window.driver,wait_time).until(
+                EC.presence_of_element_located((By.XPATH, accept_cookies_xpath3)))
+                accept_cookies_xpath_element.click()
+                time.sleep(wait_time2)
+            except:
+                pass
             time.sleep(wait_time2)
             try:
                 accept_cookies_xpath_element = WebDriverWait(self.scrapping_window.driver,wait_time).until(
@@ -177,26 +183,11 @@ class ApplyBot():
                     self.scrapping_window.driver.get(current_job_page)
                     time.sleep(2)
                 except:
-                    try:
-                        self.scrapping_window.driver.get(current_job_page)
-                        self.scrapping_window.driver.refresh()
-                        time.sleep(wait_time3)
-                    except:
-                        time.sleep(20)
-                        self.scrapping_window.driver.get(current_job_page)
-                        self.scrapping_window.driver.refresh()
-                        time.sleep(20)
-                        
+                    self.scrapping_window.driver.get(current_job_page)
+                    self.scrapping_window.driver.refresh()
+                    time.sleep(wait_time3)
+                
                 if grid is False:
-                    
-                    try:
-                        review_button_xpath = "/html/body/div/div/div/button[2]/svg"
-                        review_button_element = WebDriverWait(self.scrapping_window.driver,wait_time).until(
-                        EC.presence_of_element_located((By.XPATH, review_button_xpath)))
-                        review_button_element.click()
-                        time.sleep(wait_time2)
-                    except:
-                        pass
                     grid_view_element = WebDriverWait(self.scrapping_window.driver,wait_time).until(
                     EC.presence_of_element_located((By.XPATH, grid_view_xpath)))
                     grid_view_element.click()
