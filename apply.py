@@ -177,10 +177,16 @@ class ApplyBot():
                     self.scrapping_window.driver.get(current_job_page)
                     time.sleep(2)
                 except:
-                    self.scrapping_window.driver.get(current_job_page)
-                    self.scrapping_window.driver.refresh()
-                    time.sleep(wait_time3)
-                
+                    try:
+                        self.scrapping_window.driver.get(current_job_page)
+                        self.scrapping_window.driver.refresh()
+                        time.sleep(wait_time3)
+                    except:
+                        time.sleep(20)
+                        self.scrapping_window.driver.get(current_job_page)
+                        self.scrapping_window.driver.refresh()
+                        time.sleep(20)
+                        
                 if grid is False:
                     grid_view_element = WebDriverWait(self.scrapping_window.driver,wait_time).until(
                     EC.presence_of_element_located((By.XPATH, grid_view_xpath)))
