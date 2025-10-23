@@ -188,6 +188,15 @@ class ApplyBot():
                         time.sleep(20)
                         
                 if grid is False:
+                    
+                    try:
+                        review_button_xpath = "/html/body/div/div/div/button[2]/svg"
+                        review_button_element = WebDriverWait(self.scrapping_window.driver,wait_time).until(
+                        EC.presence_of_element_located((By.XPATH, review_button_xpath)))
+                        review_button_element.click()
+                        time.sleep(wait_time2)
+                    except:
+                        pass
                     grid_view_element = WebDriverWait(self.scrapping_window.driver,wait_time).until(
                     EC.presence_of_element_located((By.XPATH, grid_view_xpath)))
                     grid_view_element.click()
