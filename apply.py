@@ -89,7 +89,9 @@ class ApplyBot():
     def login(self) -> bool:
         """Login to Welcome to the jungle"""
         try:
+            time.sleep(5)
             self.scrapping_window.driver.get(login_page_url)
+            time.sleep(5)
             if len(str(self.cookies_file_data)) > 10:
                 cookies = pickle.load(open("cookies.pkl","rb"))
                 button_to_triger_login_page_element = WebDriverWait(self.scrapping_window.driver,wait_time).until(
@@ -185,6 +187,15 @@ class ApplyBot():
                 except:
                     self.scrapping_window.driver.get(current_job_page)
                     self.scrapping_window.driver.refresh()
+                    try:
+                        reset_file("cookies.pkl")
+                        self.login()
+                        time.sleep(10)
+                        self.scrapping_window.driver.get(current_job_page)
+                    except:
+                        print("too much error")
+                        exit()
+
                     time.sleep(wait_time3)
                 
                 if grid is False:
@@ -268,7 +279,7 @@ class ApplyBot():
             try:
                 if len(self.list_of_job_url) >= self.maximum_number_of_offer:
                     return
-                current_job_url = f"/html/body/div[1]/div/div/div/div[3]/div/div[3]/div/ul/li[{str(index)}]/div/div/div/a"
+                current_job_url = f"/html/body/div[2]/div/div/div/div[3]/div/div[3]/div/ul/li[{str(index)}]/div/div/a"
                 current_job_url_element = WebDriverWait(self.scrapping_window.driver,wait_time - 6).until(
                 EC.presence_of_element_located((By.XPATH, current_job_url)))
                 if current_job_url_element.get_property("href") not in self.list_of_job_url and current_job_url_element.get_property("href").lower() not in self.job_already_find:
@@ -398,10 +409,11 @@ class ApplyBot():
                     #view_more_text_element.click()
                 except:
                     pass
+            
 
             job_offer_text_element = WebDriverWait(self.scrapping_window.driver,wait_time - 6).until(
             EC.presence_of_element_located((By.XPATH, job_offer_text_xpath)))
-
+        
 
             try:
                 for forbiden_word in self.forbiden_words_job_offer_text:
@@ -765,6 +777,8 @@ def apply_script(question_mode=False):
         #  6 Trying to apply again of job offer that failed
         
         list_of_all_job_applied_url = print_file_content("list_of_applied_job.txt").lower().split("\n")
+        # if len(auto_apply.job_offer_url_to_retry) != 0:
+        #     auto_apply.login()
         for index , job_offer_url_to_retry in enumerate(auto_apply.list_of_job_url_to_retry):
             if job_offer_url_to_retry.lower() not in list_of_all_job_applied_url:
                 print(f"Job offer retry {index+1}/{len(auto_apply.list_of_job_url_to_retry)} url:{job_offer_url_to_retry}")

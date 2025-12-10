@@ -7,6 +7,8 @@
 accept_content_datatestid:str = "apply-form-consent"
 accept_cookies_xpath:str = "/html/body/div[2]/div/div/div[1]/div[2]/button[3]"
 accept_cookies_xpath2:str = "/html/body/div[13]/div/div/div[1]/div[2]/button[3]"
+accept_cookies_xpath3:str = "/html/body/div[12]/div/div/div[1]/div[2]/button[3]"
+accept_cookies_xpath4:str = "/html/body/div[4]/div/div/div[1]/div[2]/button[3]"
 accept_cookies_id:str = "axeptio_btn_acceptAll"
 apply_form_datatestid:str = "apply-form-modal"
 apply_to_the_job_datatestid:str = "apply-form-submit"
@@ -26,11 +28,11 @@ discord_question = 6
 discord_cover_letter = 7
 found_offer_datatestid:str = "search-results"
 good_apply_datatestid:str = "modals"
-grid_view_xpath:str = "/html/body/div[1]/div/div/div/div[3]/div/div[2]/div[2]/div[2]/button[2]"
+grid_view_xpath:str = "/html/body/div[2]/div/div/div/div[3]/div/div[2]/div[2]/div[2]/button[2]"
 info_of_the_job_datatestid:str = "job-metadata-block"
 job_page_url:str = "https://www.welcometothejungle.com/jobs?query="
 job_offer_localisation_datatestid:str = "jobs-home-search-field-location"
-job_offer_first_localisation_xpath:str = "/html/body/div[1]/div/div/div/div[1]/div/div[2]/div/div/div/div/div[2]/div/div[1]/div[2]/div/p"
+job_offer_first_localisation_xpath:str = "/html/body/div[2]/div/div/div/div[1]/div/div[2]/div/div/div/div/div[2]/div/div[1]/div[2]"
 job_offer_first_localisation_xpath2:str = "/html/body/div[1]/div/div/div/div[1]/div/div[2]/div/div/div/div/div[2]/div/div[1]/div[2]"
 job_offer_name_xpath:str = "/html/body/div[1]/div/div/div/div/div[3]/section/div[1]/h2"
 job_offer_question_xpath:str = "/html/body/div[17]/div[2]/div/section/form/fieldset[3]"
@@ -50,7 +52,7 @@ job_offer_question_xpath14:str = "/html/body/div[20]/div[2]/div/section/form/fie
 job_offer_question_xpath_list:list[str] = [job_offer_question_xpath,job_offer_question_xpath2,job_offer_question_xpath3,job_offer_question_xpath4,job_offer_question_xpath5,job_offer_question_xpath6,job_offer_question_xpath7,job_offer_question_xpath8,
                                             job_offer_question_xpath9,job_offer_question_xpath10,job_offer_question_xpath11,job_offer_question_xpath12,job_offer_question_xpath13,job_offer_question_xpath14]
 job_offer_question_xpath_list_special_nb:list[str] = ["17","22","18","12","13","16","21","14","20","15","23","16","19","20"]
-job_offer_text_xpath:str = "/html/body/div[1]/div/div/div/div/div[3]/section/div[4]/div/div[2]"
+job_offer_text_xpath:str = "/html/body/div[2]/div/div/div/div/div[3]/section/div[4]"
 internship_job_url_typing:str = "&refinementList%5Bcontract_type%5D%5B%5D=internship&refinementList%5Bcontract_type%5D%5B%5D=apprenticeship"
 localisation_of_the_job:str = "&aroundQuery="
 login_button_email_datatestid:str = "login-field-email"
