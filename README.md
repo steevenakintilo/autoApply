@@ -2,6 +2,7 @@
 A bot that will apply to job for yourself on Welcome to the jungle 
 https://www.welcometothejungle.com/
 
+⚠️Welcome To The Jungle updated their website yesterday (27/04/2026) so the interface has completely changed so the bot won't work.
 To understand the bot and how it works first read all the README file.
 
 ## 📘 Summary
